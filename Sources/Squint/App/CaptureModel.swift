@@ -13,9 +13,10 @@ final class CaptureModel {
     private(set) var status = Status.idle
     private(set) var hotKeyAvailable = false
 
-    var symbol: String {
+    /// SF Symbol shown briefly in place of the logo after a capture; nil while idle.
+    var statusSymbol: String? {
         switch status {
-        case .idle: "text.viewfinder"
+        case .idle: nil
         case .copied: "checkmark.circle"
         case .failed: "exclamationmark.triangle"
         }

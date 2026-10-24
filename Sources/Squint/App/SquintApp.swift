@@ -5,8 +5,15 @@ struct SquintApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
 
     var body: some Scene {
-        MenuBarExtra("Squint", systemImage: appDelegate.model.symbol) {
+        MenuBarExtra {
             MenuContent(model: appDelegate.model)
+        } label: {
+            if let symbol = appDelegate.model.statusSymbol {
+                Image(systemName: symbol)
+                    .accessibilityLabel("Squint")
+            } else {
+                Image(nsImage: MenuBarIcon.image)
+            }
         }
     }
 }
