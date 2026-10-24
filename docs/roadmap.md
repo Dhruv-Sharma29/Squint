@@ -29,7 +29,6 @@ Sources: [textsniper.app](https://textsniper.app) and the [TRex README](https://
 | Custom global shortcut | ✓ | ✓ | ✗ (fixed ⌘⇧2, the same default as TextSniper) | Phase 1 |
 | Settings window | Shortcut only | ✓ | ✗ | Phase 1 |
 | Launch at login | Not listed | ✓ | Only via `brew services` | Phase 1 |
-| Read text aloud | ✓ | Not listed | ✗ | Phase 1 |
 | Choose recognition language | Follows macOS version | ✓ | Automatic only, in Plain Mode | Phase 1 |
 | Custom word list | Not listed | ✓ | ✗ | Phase 1 |
 | Read an image from the clipboard | Not listed | ✓ | ✓ | — |
@@ -75,11 +74,10 @@ Small features people expect. Each one should take a day or less, with no new de
 | Custom global shortcut | A key recorder that re-registers through the existing Carbon `HotKey` and is saved to `UserDefaults`. Report conflicts, since `RegisterEventHotKey` already returns an error when another app owns the shortcut. |
 | Launch at login | `SMAppService.mainApp`, a native toggle that doesn't need `brew services` |
 | Recognition language and custom words | Language picker filled from Vision's `supportedRecognitionLanguages()`, which lists 33 languages on macOS 27, including Hindi and Marathi. Pass a custom word list through Vision's `customWords`. |
-| Read aloud | "Speak after capture" option using `AVSpeechSynthesizer`. Matches TextSniper and helps readers with dyslexia. |
 | After-capture actions | Open the first URL found (`NSDataDetector`), or run a named Shortcut (`shortcuts run`) |
 | Hide the menu bar icon | Optional. Squint stays reachable through the shortcut and `squint://` links. |
 
-**Done when:** every TextSniper feature listed above is matched, and each new feature has a unit test or a written manual check.
+**Done when:** the features above ship, each with a unit test or a written manual check.
 
 ## Phase 2: Better than both at code
 
