@@ -8,9 +8,11 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 
 - **Settings window** (⌘, from the menu): record your own global shortcut, open at login, choose the Plain Mode recognition language, and play a sound when text is copied. All settings, including Code Mode, persist across launches.
 - **Spotlight, Siri and Shortcuts actions:** Capture Text, Capture Code, Capture Plain Text and Read Clipboard Image. Type "Squint" in Spotlight. In Shortcuts, each action returns the captured text.
-- **Editor line numbers are removed** in Code Mode, and lone docstring `"""` lines Vision skips are restored.
+- **Editor line numbers are removed** in Code Mode, even when Vision reads only two of them, and lone docstring `"""` lines Vision skips are restored.
+- More code-only misreads repaired: `{` read as `f` or `t`, a lone `}` read as `8`, `)` or `]`, template-literal backticks read as quotes, and `||` read as `|l`.
 - **VoiceOver announces** when text is copied and when a capture fails.
-- **Benchmark** ([`bench/`](bench/README.md)): 40 real-code screenshots plus a renamed-identifier copy, comparing Squint with Apple Vision, Live Text, TRex and an AI chat assistant. Results in [Evaluation](docs/evaluation.md).
+- **Benchmark** ([`bench/`](bench/README.md)): development, test, renamed-identifier and fresh held-out sets of real-code screenshots, comparing Squint with Apple Vision, Live Text, TRex and an AI chat assistant. Results in [Evaluation](docs/evaluation.md).
+- **End-to-end tests** of the capture and clipboard journeys through the real recognition pipeline (37 tests in 7 suites).
 - **Continuous integration:** every push is built, tested and bundled on GitHub Actions.
 - App icon in Apple's layered format, so macOS 26 and later show it in the native shape rather than inside a grey container.
 - Menu bar icon based on the logo, drawn as a template image that follows light and dark menu bars.
@@ -19,12 +21,13 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 
 ### Changed
 
-- Character error rate on the benchmark's test set fell from **7.1% to 4.1%** (renamed identifiers: 7.4% to 3.7%), mostly from line-number removal.
+- Character error rate on the benchmark's test set fell from **7.1% to 3.2%** (renamed identifiers: 7.4% to 3.4%; fresh held-out set: 2.4%).
 - Code Mode's menu tick now lines up with the menu's icons.
 - The Screen Recording message says to reopen Squint, which macOS requires before a new permission takes effect.
 
 ### Fixed
 
+- A missing image file is reported as missing, not as being in the wrong format.
 - **Read Clipboard Image** read the *icon* of an image file copied in Finder instead of the image.
 - Pressing the shortcut twice quickly opened two selection overlays.
 - The Code Mode setting was forgotten on every launch.
