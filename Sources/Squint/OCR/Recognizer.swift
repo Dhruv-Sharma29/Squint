@@ -183,7 +183,9 @@ enum Recognizer {
     // ponytail: bracket counting ignores strings/comments and emits bare `}` (not `});`). Use a tokenizer once eval data shows it matters.
     static func render(_ slots: [Slot]) -> String {
         let pairs: [Character: Character] = ["{": "}", "(": ")", "[": "]"]
+        let language = CodeLanguage.detect(slots.compactMap { if case .text(_, let text) = $0 { text } else { nil } })
         var open: [Character] = []
+        var openedAt: [Int] = [] // the indent of the line each open bracket is on
         var lines: [String] = []
         var inDocstring = false
         var previousText: String?
@@ -199,24 +201,49 @@ enum Recognizer {
                     inDocstring.toggle()
                 } else {
                     let closer = open.popLast().flatMap { pairs[$0] }
+                    openedAt = Array(openedAt.prefix(open.count))
                     lines.append(closer.map { padding + String($0) } ?? "")
                 }
-            case .text(let indent, var text):
-                if let next = slots[(index + 1)...].lazy.compactMap(\.indent).first, next > indent,
-                   let last = text.last, "1Il|ft".contains(last), text.dropLast().hasSuffix(" ") {
+            case .text(var indent, var text):
+                let opensBlock = slots[(index + 1)...].lazy.compactMap(\.indent).first.map { $0 > indent } ?? false
+                let opensDocstring = open.isEmpty && previousText?.wholeMatch(of: /\s*(async\s+)?(def|class)\b.*:\s*/) != nil
+                // Python: a lone docstring `"""` that Vision read as junk marks.
+                if language == .python, inDocstring || opensDocstring, CodeRepairs.isMisreadDocstringQuote(text) {
+                    text = "\"\"\""
+                }
+                if opensBlock, let last = text.last, "1Il|ft".contains(last) || (language == .braces && last == "("), text.dropLast().hasSuffix(" ") {
                     text = text.dropLast() + "{"
+                }
+                if language == .braces, !inDocstring {
+                    // `=> {` read as `=>` or `>`, with the block on the next line.
+                    if opensBlock, let arrow = text.firstMatch(of: /\)\s=?>$/) { text.replaceSubrange(arrow.range, with: ") => {") }
+                    // `} catch {` and `} else {` read without their `}`.
+                    // Whether a block follows is judged from the `}`'s own indent, the opener's, not Vision's.
+                    if open.last == "{", let opener = openedAt.last, text.firstMatch(of: /^(catch|else|finally)\b/) != nil {
+                        text = "} " + text
+                        let next = slots[(index + 1)...].lazy.compactMap(\.indent).first
+                        if let next, next > opener, !text.hasSuffix("{") { text += " {" }
+                    }
                 }
                 // A lone `}` misread as `8`, `)` or `]` while the innermost open bracket is a brace.
                 if open.last == "{", ["8", ")", "]"].contains(text) {
                     text = "}"
                 }
                 text = repairingCodeMisreads(repairingSquareBrackets(text))
+                if !inDocstring { text = CodeRepairs.repairing(text, language: language) }
+                // A line that starts by closing the innermost bracket lines up with the line that opened it.
+                if let first = text.first, let top = open.last, pairs[top] == first, let opener = openedAt.last,
+                   language != .unknown {
+                    indent = opener
+                }
                 var floor = open.count
                 for character in text {
                     if pairs[character] != nil {
                         open.append(character)
+                        openedAt.append(indent)
                     } else if let top = open.last, pairs[top] == character {
                         open.removeLast()
+                        openedAt.removeLast()
                         floor = min(floor, open.count)
                     }
                 }
@@ -225,9 +252,11 @@ enum Recognizer {
                 let trailing = text.last { !$0.isWhitespace }
                 let opened = open[floor...]
                 open.removeSubrange(floor...)
-                open += opened.enumerated().filter { offset, opener in
-                    opener == "{" || (offset == opened.count - 1 && opener == trailing)
-                }.map(\.element)
+                let kept = opened.indices.filter { i in opened[i] == "{" || (i == opened.endIndex - 1 && opened[i] == trailing) }
+                let keptAt = kept.map { openedAt[$0] }
+                openedAt.removeSubrange(floor...)
+                open += kept.map { opened[$0] }
+                openedAt += keptAt
                 if text.ranges(of: "\"\"\"").count % 2 == 1 {
                     inDocstring.toggle()
                 }
