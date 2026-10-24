@@ -55,11 +55,11 @@ The menu bar shows a monochrome version of the logo: an eye with `</>` inside a 
 
 ## Testing
 
-23 tests in 5 suites, written with Swift Testing. CI runs them on every push ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), together with a build and a signed bundle.
+24 tests in 5 suites, written with Swift Testing. CI runs them on every push ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), together with a build and a signed bundle.
 
 | Suite | Covers |
 |---|---|
-| `RecognizerTests` | Indent snapping; restoring brackets and docstring quotes Vision skipped; `{` and `]` misreads; a misread can't change later closers; line-number gutter removal, and code that merely starts with numbers is left alone; reading a QR code; metrics |
+| `RecognizerTests` | Indent snapping; restoring brackets and docstring quotes Vision skipped; `{` and `]` misreads; a misread can't change later closers; line-number gutter removal, and code that merely starts with numbers is left alone; missing vs unreadable files; reading a QR code; metrics |
 | `ShortcutTests` | Recording a shortcut from a key press, rejecting plain keys, named keys, display order, encoding |
 | `PreferencesTests` | Defaults for new users; every setting survives a relaunch |
 | `LinkCommandTests` | `squint://` link parsing, including case and unknown links |
