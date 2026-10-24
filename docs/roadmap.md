@@ -1,9 +1,21 @@
 # Roadmap
 
-**Goal:** make Squint the most accurate way to copy code from a screen on macOS, while matching the everyday features people expect from TextSniper and TRex.
+**Goal:** make Squint the fastest and most accurate *on-device* way to copy code from a screen on macOS, while matching the everyday features people expect from TextSniper and TRex.
 
 The order is deliberate. **Measure first** (Phase 0), add the small expected features (Phase 1), then put most of the effort where Squint can clearly win: code accuracy (Phase 2).
 
+## Status (October 2026)
+
+| Phase | Status |
+|---|---|
+| 0: Benchmark | **Done.** 40 real-code screenshots plus a renamed-identifier copy, five systems. See [Evaluation](evaluation.md). |
+| 1: Expected features | **Mostly done.** Settings, custom shortcut, open at login, Plain Mode language and Spotlight/Shortcuts actions shipped. A custom word list and hiding the menu bar icon are open. |
+| 2: Code accuracy | **Item 1 done** (line numbers): test-set error rate 7.1% → 4.1%. Items 2–7 open. |
+| 3, 4 | CI is done; the rest is open. |
+
+**What the benchmark changed:** an AI chat assistant transcribed every test image perfectly, so Squint can't claim to be the most accurate option overall. Its case is the most accurate *on-device* option, about 4× fewer errors than the OCR built into macOS, at 0.13 s per capture, free and private. The plan below reflects that.
+
+- [Status](#status-october-2026)
 - [Where Squint stands](#where-squint-stands)
 - [Principles](#principles)
 - [Phase 0: Benchmark](#phase-0-benchmark)
@@ -20,20 +32,21 @@ The order is deliberate. **Measure first** (Phase 0), add the small expected fea
 
 Sources: [textsniper.app](https://textsniper.app) and the [TRex README](https://github.com/amebalabs/TRex), as of October 2026. "Not listed" means the product page or README doesn't mention the feature, not that it definitely doesn't exist.
 
-| Capability | TextSniper | TRex | Squint 0.1 | Plan |
+| Capability | TextSniper | TRex | Squint | Plan |
 |---|---|---|---|---|
 | Capture a screen region to the clipboard | ✓ | ✓ | ✓ | — |
 | **Code layout** (indentation, blank lines, brackets) | ✗ (its site warns about misreads on code) | Not listed | **✓** | Phase 2 deepens it |
-| **Accuracy benchmark tool** | Not listed | Not listed | **✓** `squint eval` | Phase 0 uses it |
+| **Accuracy benchmark** | Not listed | Not listed | **✓** `squint eval`, [`bench/`](../bench/README.md) | Done |
 | QR codes and barcodes | ✓ | ✓ | ✓ | — |
-| Custom global shortcut | ✓ | ✓ | ✗ (fixed ⌘⇧2, the same default as TextSniper) | Phase 1 |
-| Settings window | Shortcut only | ✓ | ✗ | Phase 1 |
-| Launch at login | Not listed | ✓ | Only via `brew services` | Phase 1 |
-| Choose recognition language | Follows macOS version | ✓ | Automatic only, in Plain Mode | Phase 1 |
+| Custom global shortcut | ✓ | ✓ | ✓ | Done |
+| Settings window | Shortcut only | ✓ | ✓ | Done |
+| Launch at login | Not listed | ✓ | ✓ | Done |
+| Choose recognition language | Follows macOS version | ✓ | ✓ (Plain Mode) | Done |
 | Custom word list | Not listed | ✓ | ✗ | Phase 1 |
 | Read an image from the clipboard | Not listed | ✓ | ✓ | — |
 | URL scheme | Not listed | ✓ | ✓ `squint://` | — |
-| After-capture actions (open URL, run a Shortcut) | Not listed | ✓ | ✗ | Phase 1 |
+| Spotlight, Siri and Shortcuts actions | Not listed | Not listed | ✓ (actions return the text) | Done |
+| After-capture actions (open URL, run a Shortcut) | Not listed | ✓ | Through Shortcuts | Phase 1 |
 | Command-line tool | Not listed | ✓ | ✓ | — |
 | Capture history | Not listed | ✓ | ✗ | Phase 3 |
 | Table detection | Not listed | ✓ | ✗ | Phase 3 |
@@ -64,6 +77,8 @@ Sources: [textsniper.app](https://textsniper.app) and the [TRex README](https://
 
 **Done when:** `docs/evaluation.md` publishes a baseline table of Squint vs TextSniper vs TRex on the held-out set.
 
+**Result:** done for TRex, Apple Live Text, Apple Vision and an AI chat assistant on rendered screenshots. TextSniper can't be scripted, and **real screenshots and the user check are still open**.
+
 ## Phase 1: Expected features
 
 Small features people expect. Each one should take a day or less, with no new dependencies.
@@ -74,7 +89,8 @@ Small features people expect. Each one should take a day or less, with no new de
 | Custom global shortcut | A key recorder that re-registers through the existing Carbon `HotKey` and is saved to `UserDefaults`. Report conflicts, since `RegisterEventHotKey` already returns an error when another app owns the shortcut. |
 | Launch at login | `SMAppService.mainApp`, a native toggle that doesn't need `brew services` |
 | Recognition language and custom words | Language picker filled from Vision's `supportedRecognitionLanguages()`, which lists 33 languages on macOS 27, including Hindi and Marathi. Pass a custom word list through Vision's `customWords`. |
-| After-capture actions | Open the first URL found (`NSDataDetector`), or run a named Shortcut (`shortcuts run`) |
+| ~~Spotlight and Shortcuts~~ | **Done:** four App Intents that return the captured text |
+| After-capture actions | Open the first URL found (`NSDataDetector`). Running a Shortcut is now possible the other way round, from Shortcuts. |
 | Hide the menu bar icon | Optional. Squint stays reachable through the shortcut and `squint://` links. |
 
 **Done when:** the features above ship, each with a unit test or a written manual check.
@@ -85,7 +101,8 @@ This is where Squint wins. Work in order of measured impact: re-rank this list u
 
 | # | Improvement | Why it matters |
 |---|---|---|
-| 1 | **Remove line-number gutters**: detect a left column of consecutive integers and strip it | Editor and video screenshots usually include line numbers. Today Squint copies them. |
+| ~~1~~ | ~~**Remove line-number gutters**~~ | **Done.** Line-numbered images went from 13.9% to 6.1% character errors on the test set. |
+| 1b | **Fix common character misreads** (`L`/`l`, a missing space before `_`) with code-aware rules | Now the largest remaining error source |
 | 2 | **Character-level spacing**: split Vision boxes at spaces with `VNRecognizedText.boundingBox(for:)` | Keeps aligned comments and runs of spaces, the one error left in the smoke test |
 | 3 | **Bracket repair that understands code**: ignore brackets in strings and comments; restore `});`, `})` and `]);` in the order they were opened | Removes today's biggest known limitation |
 | 4 | **Detect the language** (Python, JavaScript, Swift, Java, C-family) from keywords and syntax | Enables language-specific repair, such as no braces in Python and checking semicolons in C-family code |
@@ -108,7 +125,7 @@ This is where Squint wins. Work in order of measured impact: re-rank this list u
 | Step | Effect |
 |---|---|
 | `homebrew-tap` repository | `brew install dhruv-sharma29/tap/squint`: one command instead of three |
-| GitHub Actions CI | Build and `swift test` on every push |
+| ~~GitHub Actions CI~~ | **Done:** build, tests and a signed bundle on every push |
 | Release script | Tag → compute checksum → update formula, in one step |
 | Apple Developer ID ($99 a year) | Signed and notarized downloads. Also keeps the Screen Recording permission across updates, since ad-hoc builds lose it. |
 | Official Homebrew cask | Needs signing and notarization, plus Homebrew's notability bar: 75 stars or 30 forks or watchers, or 225 stars or 90 forks or watchers for a self-submission, and a repository at least 30 days old |
@@ -118,31 +135,32 @@ This is where Squint wins. Work in order of measured impact: re-rank this list u
 
 | Idea | Why not, for now |
 |---|---|
-| LLM clean-up | Has to beat the rule-based repair on the held-out set first. It also adds latency and either a large model or network access, which conflicts with the privacy promise. Revisit with an on-device model if the benchmark shows a gap that rules can't close. |
+| LLM clean-up, on by default | The benchmark shows the gap is real: AI chat was perfect where Squint averaged 4% character errors. But sending screenshots to a cloud model by default breaks the privacy promise. **Under consideration instead:** an opt-in setting, preferably with an on-device model, scored on the benchmark before it ships. |
 | General watch mode | Niche. Scroll capture covers the code use case. |
 | Tesseract | Vision already reads Hindi and Marathi on current macOS, and Tesseract is a large dependency. |
 
 ## Success metrics
 
-These targets are **proposed** and should be revisited once Phase 0 shows the real baselines. All are measured on the held-out set.
+Measured on the 40-image test set (rendered screenshots), October 2026.
 
-| Metric | Target |
-|---|---|
-| Character error rate | At most **half** of the better of TextSniper and TRex |
-| Lines exact | At least **20 percentage points** above the better competitor |
-| Parse rate for complete snippets | **90% or higher** |
-| Selection-to-clipboard time | **Under 1 s** at the 95th percentile, on a 2020-or-later Mac |
-| User check | **4 of 5** users paste and run a snippet without editing it |
-| Regressions | None on existing benchmark images |
+| Metric | Target | Now | Met? |
+|---|---|---|---|
+| Character error rate | At most **half** of the better of TextSniper and TRex | 4.1% vs TRex 18.6% (TextSniper not measurable) | ✓ for TRex |
+| Lines exact | At least **20 points** above the better competitor | 56% vs TRex 2% | ✓ |
+| Parse rate for complete snippets | **90% or higher** | 10% (4 of 40) | ✗ — the main open problem |
+| Selection-to-clipboard time | **Under 1 s** at the 95th percentile | 0.15 s (recognition, CLI) | ✓ |
+| User check | **4 of 5** users paste and run a snippet without editing it | Not run yet | — |
+| Regressions | None on existing benchmark images | Images without line numbers unchanged at 2.9% | ✓ |
 
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
 | Apple improves Live Text for code | Keep the advantage measurable and public through the benchmark; parse-guided repair is hard to copy |
+| AI chat is more accurate | Compete on speed, privacy and cost; consider an opt-in on-device model (see [Not planned](#not-planned)) |
 | Reported macOS 27 Vision regression | Move to the Swift `RecognizeTextRequest` API (macOS 15+) if it shows up |
 | Overfitting repair rules to the benchmark | Strict held-out split, grouped by source; add new screenshots every release |
-| ⌘⇧2 clash with TextSniper | Custom shortcut in Phase 1; Squint already reports the clash in its menu |
+| ⌘⇧2 clash with TextSniper | **Resolved:** custom shortcut in Settings, and the clash is reported |
 | Permission friction after updates | Developer ID signing (Phase 4) |
 
 ## Indicative timeline
