@@ -347,7 +347,7 @@ func drawScene(_ scene: Scene) {
     }
 
     // Step captions.
-    let steps = ["1   Press ⌘⇧2", "2   Drag over the code", "3   Paste code that runs"]
+    let steps = ["1   Press ⌘⇧2", "2   Drag over the code", "3   Paste, indentation intact"]
     let pillWidth = 230.0, pillGap = 16.0
     let startX = (demoWidth - (pillWidth * 3 + pillGap * 2)) / 2
     for (index, step) in steps.enumerated() {
