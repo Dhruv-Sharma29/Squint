@@ -23,7 +23,7 @@ TextSniper isn't included: it's paid, closed-source and has no command-line inte
 - line numbers on about 40% of images
 - 3 conditions: a Retina **screenshot**, or a paused **1080p** or **720p video** (downscaled, JPEG-compressed, upscaled back)
 
-`--novel` writes a second set with every identifier consistently renamed (`groupBy` → `amberKiln`), so no model can recall the code from training.
+`--novel` writes a second set with every identifier consistently renamed (`groupBy` → `amberKiln`), so no model can recall the code from training. `--dev` writes the development set used for tuning, and `--holdout` a fresh test set; neither shares a snippet with the test set.
 
 The images are rendered, not captured from real apps. They're realistic, but not a substitute for real screenshots; see [Threats to validity](../docs/evaluation.md#threats-to-validity).
 
@@ -53,5 +53,5 @@ python3 bench/score.py bench/data-novel
 
 ## Rules
 
-- **Never tune on this set.** Develop against a set made with a different seed, and run this one to report results.
+- **Never tune on the test sets.** Develop against `data-dev`, run `data` and `data-novel` to report, and keep `data-holdout` for final numbers.
 - Publish per-image results (`results-*.csv`) alongside the summary. They contain scores and settings only, no code.

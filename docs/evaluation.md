@@ -6,15 +6,16 @@ To show Squint is better than other tools, you have to measure it. This page cov
 - [Metrics](#metrics)
 - [The benchmark](#the-benchmark)
 - [Current results](#current-results)
+- [How Squint got here](#how-squint-got-here)
 - [What the results mean](#what-the-results-mean)
 - [Threats to validity](#threats-to-validity)
 - [Scoring your own screenshots](#scoring-your-own-screenshots)
 
 ## Headline
 
-On 40 screenshots of real-world code that Squint was never tuned on, **Squint made 57–62% fewer character errors than the OCR built into macOS and TRex** (7.1% against 16.7–18.8%). It beat them on 35–40 of 40 images, with a sign test at p < 10⁻⁶. It takes about 0.14 s per capture, offline.
+On screenshots of real-world code that Squint was never tuned on, **Squint made 2.4–3.4% character errors, against 15.8–19.2% for the OCR built into macOS, Apple Live Text and TRex**: at least 4.6× fewer. It beat each of them on 98 of 99 images, at about 0.13 s per capture, offline.
 
-**An AI chat assistant (Claude) transcribed every image perfectly**, including a second set with renamed identifiers that it couldn't have memorized. On accuracy alone, Squint does not beat AI chat. Most Squint captures still need a small edit before they run, and line-number gutters are its biggest weakness.
+**An AI chat assistant (Claude) transcribed every image perfectly**, including a set with renamed identifiers it couldn't have memorized. On accuracy alone, Squint does not beat AI chat. Squint gets most lines exactly right (53–71%), but only 8–36% of captures parse as pasted, depending on the set. Usually one or two misread characters are the problem.
 
 ## Metrics
 
@@ -31,67 +32,100 @@ Blind spots: character error rate weighs a missing space the same as a wrong sym
 
 ## The benchmark
 
-Everything is in [`bench/`](../bench/README.md) and can be re-run. In short:
+Everything is in [`bench/`](../bench/README.md) and can be re-run.
 
-- **40 real functions**, picked at random with a fixed seed: 20 from Python's standard library and 20 from npm's JavaScript source, 6–22 lines each.
-- **Realistic rendering:** 6 editor themes, 6 monospaced fonts at 12–20 pt, line numbers on about 40%, and three conditions: a Retina screenshot, or a paused 1080p or 720p video.
-- **A novel-code copy** with every identifier renamed, to test whether any system just recalls famous code.
-- **Five systems:** Squint, Apple Vision with default settings, Apple Live Text, TRex's own engine, and an AI chat assistant (Claude) that could open only the images. Its file access was checked afterwards. TextSniper isn't included: it's paid and can't be scripted.
-- **Squint was not tuned on these images.** Results were recorded with the build at commit `ccd7503`.
+- **Real functions**, picked at random with fixed seeds from Python's standard library and npm's JavaScript source, 6–22 lines each.
+- **Realistic rendering:** 6 editor themes, 6 monospaced fonts at 12–20 pt, line numbers on about 40% of images, and three conditions: a Retina screenshot, or a paused 1080p or 720p video.
+- **Four sets, kept apart:**
+
+| Set | Images | Used for |
+|---|---|---|
+| Development | 40 (20 Python, 20 JavaScript) | Finding failures and tuning. Never reported as evidence. |
+| Test | 40 (20 Python, 20 JavaScript) | Reporting. Run after each round of development. |
+| Renamed identifiers | 37 (the test snippets, renamed) | Ruling out memorization by AI models |
+| Fresh held-out | 22 (20 Python, 2 JavaScript) | Final numbers: created after all development was done and never looked at during it |
+
+- **Five systems:** Squint, Apple Vision with default settings, Apple Live Text, TRex's own engine, and an AI chat assistant (Claude) that could open only the images; its file access was checked afterwards. TextSniper isn't included: it's paid and can't be scripted. The AI baseline was run on the test and renamed sets.
 
 ## Current results
 
-### Real code (40 images)
+Squint 0.2.0, final build.
+
+### Test set (40 images)
 
 | System | Character error rate | Lines exact | Snippet exact | Parses |
 |---|---|---|---|---|
-| **Squint** (Code Mode) | **7.1%** | **44%** | 2/40 | 3/40 |
+| **Squint** (Code Mode) | **3.2%** | **61%** | 3/40 | 5/40 |
 | Apple Vision, default settings | 16.7% | 2% | 0/40 | 0/40 |
 | TRex | 18.6% | 2% | 0/40 | 0/40 |
 | Apple Live Text | 18.8% | 4% | 0/40 | 0/40 |
 | Claude (AI chat) | 0.0% | 100% | 40/40 | 40/40 |
 
-Per image, Squint had fewer errors than Apple Vision on 35 images (worse on 4), than TRex on 39 (worse on 1), and than Live Text on all 40. It had more errors than Claude on 38 and tied on 2.
+Per image, Squint had fewer errors than Apple Vision, TRex and Live Text on all 40 images (sign test, p ≈ 2 × 10⁻¹²), and more errors than Claude on 37 (3 ties).
 
 ### Renamed identifiers (37 images)
 
-Three JavaScript snippets couldn't be renamed safely and are excluded.
-
 | System | Character error rate | Lines exact | Snippet exact | Parses |
 |---|---|---|---|---|
-| **Squint** (Code Mode) | **7.4%** | **39%** | 3/37 | 3/37 |
+| **Squint** (Code Mode) | **3.4%** | **53%** | 3/37 | 3/37 |
 | Apple Vision, default settings | 15.8% | 2% | 0/37 | 0/37 |
 | TRex | 17.7% | 1% | 0/37 | 0/37 |
 | Apple Live Text | 17.9% | 2% | 0/37 | 0/37 |
 | Claude (AI chat) | 0.0% | 100% | 37/37 | 37/37 |
 
-### Where Squint fails
+### Fresh held-out set (22 images)
 
-| Condition | Squint error rate (real code) |
+| System | Character error rate | Lines exact | Snippet exact | Parses |
+|---|---|---|---|---|
+| **Squint** (Code Mode) | **2.4%** | **71%** | 3/22 | 8/22 |
+| Apple Vision, default settings | 17.5% | 6% | 0/22 | 0/22 |
+| Apple Live Text | 19.0% | 2% | 0/22 | 0/22 |
+| TRex | 19.2% | 5% | 0/22 | 0/22 |
+
+Squint beat Apple Vision and Live Text on 21 of 22 images and TRex on all 22 (p ≤ 1.1 × 10⁻⁵).
+
+### Conditions (test set, Squint)
+
+| Condition | Character error rate |
 |---|---|
-| No line numbers | **2.9%** |
-| With line numbers | 13.9% |
-| Retina screenshot | 4.9% |
-| Paused 1080p video | 7.0% |
-| Paused 720p video | 9.7% |
+| Retina screenshot | 2.9% |
+| Paused 1080p video | 3.2% |
+| Paused 720p video | 3.6% |
+| No line numbers / with line numbers | 2.7% / 4.1% |
 
-**Speed:** median 0.14 s per image (95th percentile 0.20 s), including process start-up, on Apple silicon. The menu bar app keeps Vision loaded, so it's no slower.
+**Speed:** median 0.12–0.13 s per image (95th percentile 0.14–0.15 s), including process start-up, on Apple silicon.
 
-Per-image scores: [`bench/results-data.csv`](../bench/results-data.csv) and [`bench/results-data-novel.csv`](../bench/results-data-novel.csv).
+Per-image scores: [`bench/results-data.csv`](../bench/results-data.csv), [`results-data-novel.csv`](../bench/results-data-novel.csv), [`results-data-holdout.csv`](../bench/results-data-holdout.csv) and [`results-data-dev.csv`](../bench/results-data-dev.csv).
+
+## How Squint got here
+
+Test-set character error rate after each change. Every change was developed on the development set.
+
+| Build | Change | Test set | Renamed |
+|---|---|---|---|
+| 0.1.0 | Code layout pass | 7.1% | 7.4% |
+| | Remove line-number gutters (first version) | 4.1% | 3.7% |
+| | Code-only misread repairs | 3.4% | 3.9% |
+| 0.2.0 | Gutters detected from as few as two readable numbers | **3.2%** | **3.4%** |
+
+**Being honest about the last row:** the misread repairs made two renamed-set images worse. The cause was a gutter safety check that one merged, misread number could veto. That fix was prompted by looking at test-set results, so the test sets are no longer fully untouched for that rule. That's why the **fresh held-out set** exists: it was built after all development, and is the cleanest estimate (2.4%).
+
+**A measured dead end:** rebuilding the spaces in each line from Vision's per-word positions raised development-set errors from 4.1% to 12.5%. In accurate mode, Vision's word boxes are too approximate for that. The change was reverted and is documented in the code.
 
 ## What the results mean
 
-1. **Among on-device tools, Squint is clearly the most accurate for code**, cutting character errors by more than half. The code-layout pass (indentation, blank lines, bracket repair, no autocorrect) is what makes the difference: the same Vision engine without it scores 16.7%.
-2. **AI chat is more accurate.** The renamed-identifier set shows this isn't memorization: Claude reads blurry, compressed code character by character. Squint's case against AI chat is **speed, privacy and cost**, not accuracy. It's one keystroke and about 0.1 s, works offline, sends nothing anywhere, and is free.
-3. **Squint's output usually needs a small fix.** Only 3 of 40 captures parse as pasted. The largest single cause is line-number gutters, copied as text. That's the first Phase 2 item in the [roadmap](roadmap.md).
+1. **Among on-device tools, Squint is clearly the most accurate for code**, with 4.6–8× fewer character errors. The code-layout pass is what makes the difference: the same Vision engine without it scores 15.8–17.5%.
+2. **AI chat is more accurate.** The renamed-identifier set shows it isn't memorization. Squint's case against AI chat is **speed, privacy and cost**, not accuracy. It's one keystroke and about 0.1 s, works offline, sends nothing anywhere, and is free.
+3. **Most captures still need a small fix.** Squint gets 53–71% of lines exactly right, but one wrong character anywhere stops a snippet from parsing. The remaining errors are mostly characters Vision misreads or drops (`=`, `_`, `L` read as `l`), which layout can't recover. That's the next accuracy task in the [roadmap](roadmap.md).
 
 ## Threats to validity
 
 - **Rendered, not captured.** The screenshots are realistic renders, not captures of real apps or real videos. Real captures add UI clutter, anti-aliasing quirks, scaling and selection mistakes. The next step is scoring real screenshots from users.
+- **The held-out set is mostly Python** (20 of 22), because the pool of eligible JavaScript functions had already been used by the other sets.
 - **One AI model, careful instructions.** Claude was given precise transcription rules and time to measure spacing. Quick chat use, other models or free tiers may do worse. That wasn't measured.
 - **Two languages.** Results may differ for C-family code, Rust, SQL or shell output.
 - **TRex settings.** TRex ran with its default settings (English, accurate mode); other settings may score differently.
-- **Earlier development samples.** The three synthetic samples used while building Squint (`fib`, `sum`, `groupBy`) are development data. Their results are not evidence, and they are not part of this benchmark.
+- **Earlier development samples.** The three synthetic samples used while building Squint (`fib`, `sum`, `groupBy`) are development data and aren't part of the benchmark.
 
 ## Scoring your own screenshots
 
