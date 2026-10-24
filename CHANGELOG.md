@@ -2,7 +2,7 @@
 
 All notable changes to Squint are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2026-10-24
 
 ### Added
 
@@ -18,6 +18,7 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 - Menu bar icon based on the logo, drawn as a template image that follows light and dark menu bars.
 - Product README with a demo and a before/after comparison generated from real output.
 - [Roadmap](docs/roadmap.md) with status, a phased plan and success metrics.
+- [Website](https://dhruv-sharma29.github.io/Squint/), deployed to GitHub Pages.
 
 ### Changed
 
@@ -28,6 +29,7 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 
 ### Fixed
 
+- Long messages, such as the Screen Recording one, stretched the menu across the screen. Missing permission now shows a short message and an **Open Screen Recording Settings…** button.
 - A missing image file is reported as missing, not as being in the wrong format.
 - **Read Clipboard Image** read the *icon* of an image file copied in Finder instead of the image.
 - Pressing the shortcut twice quickly opened two selection overlays.
