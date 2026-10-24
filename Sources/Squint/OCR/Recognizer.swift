@@ -65,18 +65,40 @@ enum Recognizer {
                    let last = text.last, "1Il|".contains(last), text.dropLast().hasSuffix(" ") {
                     text = text.dropLast() + "{"
                 }
+                text = repairingSquareBrackets(text)
+                var floor = open.count
                 for character in text {
                     if pairs[character] != nil {
                         open.append(character)
                     } else if let top = open.last, pairs[top] == character {
                         open.removeLast()
+                        floor = min(floor, open.count)
                     }
                 }
+                // A `(` or `[` left open mid-line is most likely a misread closer. Keep `{` and a trailing
+                // opener (a multi-line call or literal), so one misread can't change which closers get restored.
+                let trailing = text.last { !$0.isWhitespace }
+                let opened = open[floor...]
+                open.removeSubrange(floor...)
+                open += opened.enumerated().filter { offset, opener in
+                    opener == "{" || (offset == opened.count - 1 && opener == trailing)
+                }.map(\.element)
                 lines.append(String(repeating: " ", count: indent) + text)
             }
         }
         while lines.last?.isEmpty == true { lines.removeLast() }
         return lines.joined(separator: "\n")
+    }
+
+    /// Vision often reads `]` as `l`. While a line has more `[` than `]`, `[name` followed by `l` and then
+    /// `;`, `.`, `)`, `,`, a space or the line end becomes `[name]`.
+    static func repairingSquareBrackets(_ line: String) -> String {
+        var line = line
+        while line.count(where: { $0 == "[" }) > line.count(where: { $0 == "]" }),
+              let match = line.firstMatch(of: /\[(\w*?)l(?=[;.),\s]|$)/) {
+            line.replaceSubrange(match.range, with: "[\(match.1)]")
+        }
+        return line
     }
 
     /// Groups boxes into visual rows, top to bottom (Vision's origin is bottom-left).
