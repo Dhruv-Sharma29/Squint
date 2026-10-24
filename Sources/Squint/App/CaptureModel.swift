@@ -23,9 +23,30 @@ final class CaptureModel {
         }
     }
 
-    init(preferences: Preferences = Preferences()) {
+    @ObservationIgnored private let pasteboard: NSPasteboard
+    @ObservationIgnored private let screenAccess: @MainActor () -> Bool
+    @ObservationIgnored private let captureRegion: @MainActor () async throws -> URL?
+
+    /// The defaults are the real system; tests pass a private pasteboard and a stand-in for the selection overlay.
+    init(preferences: Preferences = Preferences(),
+         pasteboard: NSPasteboard = .general,
+         screenAccess: @escaping @MainActor () -> Bool = CaptureModel.requestScreenAccess,
+         captureRegion: @escaping @MainActor () async throws -> URL? = { try await ScreenCapture.region() },
+         registersHotKey: Bool = true) {
         self.preferences = preferences
-        hotKeyAvailable = registerHotKey(preferences.shortcut)
+        self.pasteboard = pasteboard
+        self.screenAccess = screenAccess
+        self.captureRegion = captureRegion
+        if registersHotKey {
+            hotKeyAvailable = registerHotKey(preferences.shortcut)
+        }
+    }
+
+    /// True when Squint may capture the screen; otherwise asks macOS to show the Screen Recording prompt.
+    static func requestScreenAccess() -> Bool {
+        if CGPreflightScreenCaptureAccess() { return true }
+        CGRequestScreenCaptureAccess()
+        return false
     }
 
     /// Switches to `shortcut`. If another app already owns it, keeps the current one and returns false.
@@ -55,14 +76,13 @@ final class CaptureModel {
     func capture(code: Bool? = nil) async -> String? {
         guard begin() else { return nil }
         defer { isBusy = false }
-        guard CGPreflightScreenCaptureAccess() else {
-            CGRequestScreenCaptureAccess()
+        guard screenAccess() else {
             // macOS applies a new Screen Recording permission only after the app restarts.
             fail(String(localized: "Allow Squint under System Settings › Privacy & Security › Screen Recording, then quit and reopen Squint."))
             return nil
         }
         do {
-            guard let shot = try await ScreenCapture.region() else { // Esc pressed
+            guard let shot = try await captureRegion() else { // Esc pressed
                 status = .idle
                 return nil
             }
@@ -79,7 +99,7 @@ final class CaptureModel {
         guard begin() else { return nil }
         defer { isBusy = false }
         do {
-            guard let image = try ClipboardImage.file() else {
+            guard let image = try ClipboardImage.file(from: pasteboard) else {
                 fail(String(localized: "The clipboard has no image. Copy a screenshot or an image file, then try again."))
                 return nil
             }
@@ -118,8 +138,8 @@ final class CaptureModel {
                 fail(String(localized: "No text found. Try selecting a larger area, or zoom in first."))
                 return nil
             }
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(text, forType: .string)
+            pasteboard.clearContents()
+            pasteboard.setString(text, forType: .string)
             status = .copied
             let lines = text.split(separator: "\n", omittingEmptySubsequences: false).count
             announce(String(localized: "Copied \(lines) lines"))
@@ -144,7 +164,7 @@ final class CaptureModel {
 
     /// VoiceOver feedback: the menu bar icon change alone isn't perceivable without sight.
     private func announce(_ message: String) {
-        NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested, userInfo: [
+        NSAccessibility.post(element: NSApplication.shared, notification: .announcementRequested, userInfo: [
             .announcement: message,
             .priority: NSAccessibilityPriorityLevel.high.rawValue,
         ])
