@@ -25,12 +25,14 @@ struct InkMap {
         self.height = height
     }
 
-    /// Leftmost glyph pixel (normalized x) in a band around `midY` (Vision coordinates, origin bottom-left), or nil if the band is empty.
-    func leftEdge(midY: Double, halfHeight: Double) -> Double? {
+    /// Leftmost glyph pixel (normalized x) in a band around `midY` (Vision coordinates, origin bottom-left), or nil if the
+    /// band is empty. Scanning starts at normalized x `from`, so an editor's line-number gutter can be skipped.
+    func leftEdge(midY: Double, halfHeight: Double, from: Double = 0) -> Double? {
         let top = max(0, Int((1 - midY - halfHeight) * Double(height)))
         let bottom = min(height, Int((1 - midY + halfHeight) * Double(height)))
+        let start = min(width, max(0, Int((from * Double(width)).rounded(.up))))
         guard top < bottom else { return nil }
-        for x in 0..<width {
+        for x in start..<width {
             for y in top..<bottom where isInk(x, y) {
                 return Double(x) / Double(width)
             }

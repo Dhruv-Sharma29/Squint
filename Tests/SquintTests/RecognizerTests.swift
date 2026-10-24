@@ -44,6 +44,17 @@ struct RecognizerTests {
         #expect(Recognizer.render(slots) == "for (const x of xs) {\n  const k = x[key];\n  if (k) {\n    use(k);\n  }\n}")
     }
 
+    @Test func restoresLoneDocstringQuotes() {
+        let slots: [Slot] = [
+            .text(indent: 0, "def create_lock(self):"),
+            .ink(indent: 4), // lone opening """ Vision skipped
+            .text(indent: 4, "Acquire a lock."),
+            .ink(indent: 4), // lone closing """
+            .text(indent: 4, "return Lock()"),
+        ]
+        #expect(Recognizer.render(slots) == "def create_lock(self):\n    \"\"\"\n    Acquire a lock.\n    \"\"\"\n    return Lock()")
+    }
+
     @Test func multiLineLiteralStillCloses() {
         let slots: [Slot] = [.text(indent: 0, "const xs = ["), .text(indent: 2, "1,"), .ink(indent: 0)]
         #expect(Recognizer.render(slots) == "const xs = [\n  1,\n]")
@@ -52,6 +63,33 @@ struct RecognizerTests {
     @Test func renderLeavesPythonAlone() {
         let slots: [Slot] = [.text(indent: 0, "if x == 1:"), .text(indent: 4, "y = 1")]
         #expect(Recognizer.render(slots) == "if x == 1:\n    y = 1")
+    }
+
+    /// A box on row `row` (top = 0) from `x` to `x + width`, in Vision's normalized, bottom-left coordinates.
+    private func box(_ text: String, row: Int, x: Double, width: Double) -> TextBox {
+        TextBox(text: text, rect: CGRect(x: x, y: 0.9 - Double(row) * 0.06, width: width, height: 0.04))
+    }
+
+    @Test func removesLineNumberGutter() {
+        let rows: [[TextBox]] = [
+            [box("1", row: 0, x: 0.03, width: 0.02), box("def f(x):", row: 0, x: 0.10, width: 0.3)],
+            [box("2", row: 1, x: 0.03, width: 0.02), box("if x:", row: 1, x: 0.14, width: 0.2)],
+            [box("3", row: 2, x: 0.03, width: 0.02)], // blank code line: only its number
+            [box("l4", row: 3, x: 0.01, width: 0.04), box("return 1", row: 3, x: 0.18, width: 0.3)], // misread "14"
+            [box("15", row: 4, x: 0.01, width: 0.04), box("return 0", row: 4, x: 0.14, width: 0.3)],
+        ]
+        let (code, gutterEnd) = Recognizer.removingLineNumbers(rows)
+        #expect(code.map { $0.map(\.text) } == [["def f(x):"], ["if x:"], ["return 1"], ["return 0"]])
+        #expect(abs(gutterEnd - 0.05) < 0.0001)
+    }
+
+    @Test func keepsCodeThatMerelyStartsWithNumbers() {
+        let decreasing: [[TextBox]] = (0..<4).map { [box("\(3 - $0)", row: $0, x: 0.1, width: 0.02), box("+ x", row: $0, x: 0.14, width: 0.1)] }
+        #expect(Recognizer.removingLineNumbers(decreasing).gutterEnd == 0)
+        let notAligned: [[TextBox]] = (0..<4).map { [box("\($0 + 1)", row: $0, x: 0.1 + Double($0) * 0.08, width: 0.02)] }
+        #expect(Recognizer.removingLineNumbers(notAligned).gutterEnd == 0)
+        let fewNumbers: [[TextBox]] = [[box("1", row: 0, x: 0.1, width: 0.02)]] + (1..<6).map { [box("code", row: $0, x: 0.1, width: 0.2)] }
+        #expect(Recognizer.removingLineNumbers(fewNumbers).rows.count == 6)
     }
 
     @Test func readsQRCode() throws {
