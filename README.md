@@ -15,7 +15,7 @@ The on-device screen-OCR app for programmers. Squint keeps the indentation, blan
 [![100% on-device](https://img.shields.io/badge/100%25-on--device-3FB950)](#private-by-design)
 [![License: MIT](https://img.shields.io/badge/License-MIT-5B7CFA)](LICENSE)
 
-[**Install**](#install) · [**See the difference**](#see-the-difference) · [**Docs**](docs/usage.md) · [**Roadmap**](docs/roadmap.md)
+[**Website**](https://dhruv-sharma29.github.io/Squint/) · [**Install**](#install) · [**See the difference**](#see-the-difference) · [**Docs**](docs/usage.md) · [**Roadmap**](docs/roadmap.md)
 
 <br>
 

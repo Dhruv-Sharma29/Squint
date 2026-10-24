@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true # a newer push supersedes older runs
+
 jobs:
   build-and-test:
     runs-on: macos-15
