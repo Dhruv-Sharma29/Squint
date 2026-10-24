@@ -66,6 +66,18 @@ The first test that calls Vision in a fresh process can take about 25 seconds wh
 
 For end-to-end accuracy, use `squint eval` on a benchmark folder; see [Evaluation](evaluation.md).
 
+## README media
+
+`docs/images/comparison.png` and `docs/images/demo.gif` are generated from **real Squint output**, never drawn by hand. Regenerate them after any change to recognition:
+
+```sh
+swift build -c release
+swiftc Sources/Squint/App/MenuBarIcon.swift scripts/ReadmeMedia/main.swift -o .build/readme-media
+.build/readme-media
+```
+
+The script renders a code frame, runs the release `Squint` binary on it in both modes, scores the results with `squint eval`, and draws the images from those outputs. The demo's windows and selection animation are illustrations of the flow, but the pasted text is exactly what Squint produced.
+
 ## Screen Recording permission during development
 
 Every build gets a new ad-hoc signature, so macOS treats it as a new app and may stop honouring an earlier Screen Recording grant. If captures come back empty after a rebuild, run:

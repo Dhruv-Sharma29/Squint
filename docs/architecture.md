@@ -69,6 +69,8 @@ Vision returns a list of text boxes. Each box is one recognized string with a bo
 6. **Rebuild spacing within a row.** The gap between neighbouring boxes on one row becomes the matching number of spaces, so aligned comments keep their alignment.
 7. **Render.** Walk the slots top to bottom, keeping a stack of open brackets (`{`, `(`, `[`):
    - A text row ending in ` 1`, ` I`, ` l` or ` |` that is followed by a more-indented row gets that character replaced by `{`. This is Vision's most common brace misread.
+   - On a row with more `[` than `]`, an `l` right after `[name` and before `;`, `.`, `)`, `,` or the line end becomes `]` (`item[keyl;` → `item[key];`).
+   - A `(` or `[` still open in the middle of a row is treated as a misread and dropped from the stack. Only `{` and an opener at the very end of a row (a multi-line call or literal) stay open, so one misread can't change which closers are restored further down.
    - An `.ink` row becomes the closer for the innermost open bracket, at its measured indent.
    - Trailing blank rows are dropped.
 
@@ -80,6 +82,7 @@ Vision returns a list of text boxes. Each box is one recognized string with a bo
 | Vision does not read a lone `}` | The full image, a cropped row, and a row upscaled 3× with padding all returned nothing |
 | Autocorrect damages code | Plain Mode output turned `fib(n):` into `fib (n) :` |
 | `{` at the end of a line is read as `1` | Seen in `for (const x of arr) {` |
+| `]` is read as `l`, which used to turn restored `}` lines into `]` | Seen in `item[key];` and `groups[k].push(...)`; now covered by unit tests |
 
 ## Concurrency
 

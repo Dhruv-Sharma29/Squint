@@ -8,6 +8,13 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 
 - App icon in Apple's layered format, so macOS 26 and later show it in the native shape rather than inside a grey container. It appears in Finder, Spotlight, System Settings and permission prompts.
 - Menu bar icon based on the logo: an eye with `</>` inside a viewfinder, drawn as a template image that follows light and dark menu bars.
+- Product README with a demo GIF and a before/after comparison, both generated from real output by `scripts/ReadmeMedia`.
+- [Roadmap](docs/roadmap.md) with a feature comparison against TextSniper and TRex, a phased plan and success metrics.
+
+### Fixed
+
+- `]` misread as `l` (for example `item[keyl;`) is repaired.
+- A misread bracket no longer changes which closing brackets are restored: lone `}` lines used to come back as `]`.
 
 ## [0.1.0] - 2026-10-24
 

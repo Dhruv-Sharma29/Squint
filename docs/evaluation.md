@@ -88,6 +88,8 @@ The output is tab-separated, so you can paste it into a spreadsheet or redirect 
 
 The remaining Python error is two spaces before an inline `#` comment collapsing to one (see [Known limitations](architecture.md#known-limitations)).
 
+**README example (`groupBy`, 12 lines of JavaScript, synthetic):** plain 0 of 12 lines exact with a 19.4% character error rate; Squint 12 of 12 with 0%. That sample first scored 8 of 12 for Squint, and its failures led to the `]`-read-as-`l` repair. Because the fix was designed after seeing this sample, it is development data, not test data.
+
 **Stability check:** 24 recognitions in a single process on macOS 27.0.1 all returned correct output. This was a check for the reported macOS 27 Vision regression.
 
 ## Threats to validity
