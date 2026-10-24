@@ -38,5 +38,5 @@ cat > "$app/Contents/Info.plist" <<'PLIST'
 </dict>
 </plist>
 PLIST
-codesign --force --sign - "$app"
+codesign --force --options runtime --sign - "$app" # hardened runtime: no code injection or unsigned libraries
 echo "$app"
