@@ -25,12 +25,20 @@ struct MenuContent: View {
         }
         .accessibilityValue(preferences.codeMode ? Text("On") : Text("Off"))
 
-        if case .failed(let message) = model.status {
+        switch model.status {
+        case .failed(let message):
             Divider()
             Text(message)
+        case .needsPermission:
+            Divider()
+            Text("Squint needs Screen Recording permission")
+            Button("Open Screen Recording Settings…", action: model.openScreenRecordingSettings)
+            Text("Then quit and reopen Squint")
+        case .idle, .copied:
+            EmptyView()
         }
         if !model.hotKeyAvailable {
-            Text("\(preferences.shortcut.displayName) is in use by another app. Choose another shortcut in Settings.")
+            Text("\(preferences.shortcut.displayName) is used by another app")
         }
 
         Divider()

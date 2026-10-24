@@ -101,7 +101,7 @@ tccutil reset ScreenCapture io.github.dhruv-sharma29.squint   # optional: forget
 | Symptom | Fix |
 |---|---|
 | Permission is granted, but captures come back empty or show only the wallpaper | The permission belongs to an older build. Remove Squint from the Screen Recording list (or run the `tccutil` command above), then capture again. |
-| The menu says your shortcut **is in use by another app** | Another app (for example TextSniper, which also defaults to ⌘⇧2) owns it. Choose a different one in **Settings… › Shortcut**. |
+| The menu says your shortcut **is used by another app** | Another app (for example TextSniper, which also defaults to ⌘⇧2) owns it. Choose a different one in **Settings… › Shortcut**. |
 | Squint's actions don't appear in Spotlight | macOS rejects App Intents from apps without an Apple Team ID (its log says `requiresValidatedBundle`), and Homebrew builds are ad-hoc signed. Build from source with `SQUINT_SIGN_IDENTITY="Apple Development" ./bundle.sh`, move `Squint.app` to Applications, and open it once. Type `squint`, not `squint://`. |
 | `squint://` links do nothing | macOS registers the link scheme when the app first launches. Open Squint once, then try again. |
 | The first capture works but later ones fail with a Vision error | The TRex project reported a macOS 27 regression in Apple's legacy text-recognition API. It could not be reproduced on macOS 27.0.1 (24 recognitions in one process). If you hit it, please open an issue with your exact macOS version. |

@@ -4,9 +4,13 @@ import Observation
 @MainActor @Observable
 final class CaptureModel {
     enum Status: Equatable {
-        case idle, copied
+        case idle, copied, needsPermission
+        /// A short message for the menu; menus can't wrap, so long text would stretch them across the screen.
         case failed(String)
     }
+
+    /// The longest message the menu shows; longer ones are cut, while VoiceOver still announces them in full.
+    static let menuMessageLimit = 48
 
     let preferences: Preferences
     private(set) var status = Status.idle
@@ -19,7 +23,7 @@ final class CaptureModel {
         switch status {
         case .idle: nil
         case .copied: "checkmark.circle"
-        case .failed: "exclamationmark.triangle"
+        case .failed, .needsPermission: "exclamationmark.triangle"
         }
     }
 
@@ -78,7 +82,8 @@ final class CaptureModel {
         defer { isBusy = false }
         guard screenAccess() else {
             // macOS applies a new Screen Recording permission only after the app restarts.
-            fail(String(localized: "Allow Squint under System Settings › Privacy & Security › Screen Recording, then quit and reopen Squint."))
+            status = .needsPermission
+            announce(String(localized: "Allow Squint under System Settings › Privacy & Security › Screen Recording, then quit and reopen Squint."))
             return nil
         }
         do {
@@ -100,7 +105,7 @@ final class CaptureModel {
         defer { isBusy = false }
         do {
             guard let image = try ClipboardImage.file(from: pasteboard) else {
-                fail(String(localized: "The clipboard has no image. Copy a screenshot or an image file, then try again."))
+                fail(String(localized: "No image on the clipboard"))
                 return nil
             }
             return await recognize(image, code: code ?? preferences.codeMode)
@@ -114,7 +119,7 @@ final class CaptureModel {
         switch LinkCommand(url) {
         case .capture(let code): await capture(code: code)
         case .clipboard(let code): await readClipboard(code: code)
-        case nil: fail(String(localized: "Unknown Squint link: \(url.absoluteString)"))
+        case nil: fail(String(localized: "Unknown link: \(url.absoluteString)"))
         }
     }
 
@@ -135,7 +140,7 @@ final class CaptureModel {
         do {
             let text = try await Self.read(image, code: code, language: preferences.language)
             guard !text.isEmpty else {
-                fail(String(localized: "No text found. Try selecting a larger area, or zoom in first."))
+                fail(String(localized: "No text found. Try a larger area."))
                 return nil
             }
             pasteboard.clearContents()
@@ -157,8 +162,16 @@ final class CaptureModel {
         }
     }
 
+    /// Opens System Settings at Privacy & Security › Screen Recording.
+    func openScreenRecordingSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     private func fail(_ message: String) {
-        status = .failed(message)
+        let limit = Self.menuMessageLimit
+        status = .failed(message.count > limit ? String(message.prefix(limit - 1)) + "…" : message)
         announce(message)
     }
 

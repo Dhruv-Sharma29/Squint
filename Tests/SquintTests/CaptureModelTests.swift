@@ -60,16 +60,11 @@ struct CaptureModelTests {
         #expect(pasteboard.string(forType: .string) == "before")
     }
 
-    @Test func missingPermissionExplainsTheFixWithoutOpeningTheOverlay() async throws {
+    @Test func missingPermissionShowsTheFixWithoutOpeningTheOverlay() async throws {
         let model = try makeModel(screenAccess: false) { throw OverlayOpened() }
 
         #expect(await model.capture() == nil)
-        guard case .failed(let message) = model.status else {
-            Issue.record("expected a failure, got \(model.status)")
-            return
-        }
-        #expect(message.contains("Screen Recording")) // not OverlayOpened: the overlay never ran
-        #expect(message.contains("reopen"))
+        #expect(model.status == .needsPermission) // not .failed(OverlayOpened): the overlay never ran
     }
 
     @Test func secondCaptureWhileBusyIsIgnored() async throws {
@@ -112,7 +107,7 @@ struct CaptureModelTests {
             Issue.record("expected a failure, got \(model.status)")
             return
         }
-        #expect(message.contains("no image"))
+        #expect(message.lowercased().contains("no image"))
         #expect(pasteboard.string(forType: .string) == "just text")
     }
 
@@ -127,13 +122,28 @@ struct CaptureModelTests {
             Issue.record("expected a failure")
             return
         }
-        #expect(clipboardMessage.contains("no image")) // reached the clipboard action, not capture
+        #expect(clipboardMessage.lowercased().contains("no image")) // reached the clipboard action, not capture
 
         await model.open(try #require(URL(string: "squint://format-disk")))
         guard case .failed(let unknownMessage) = model.status else {
             Issue.record("expected a failure")
             return
         }
-        #expect(unknownMessage.contains("Unknown Squint link"))
+        #expect(unknownMessage.contains("Unknown link"))
+    }
+
+    /// Regression: menus can't wrap, and a long message stretched the menu across the screen.
+    @Test func menuMessagesStayShort() async throws {
+        let model = try makeModel { throw OverlayOpened() }
+        let longLink = "squint://" + String(repeating: "very-long-path/", count: 20)
+
+        await model.open(try #require(URL(string: longLink)))
+
+        guard case .failed(let message) = model.status else {
+            Issue.record("expected a failure, got \(model.status)")
+            return
+        }
+        #expect(message.count <= CaptureModel.menuMessageLimit)
+        #expect(message.hasSuffix("…"))
     }
 }
