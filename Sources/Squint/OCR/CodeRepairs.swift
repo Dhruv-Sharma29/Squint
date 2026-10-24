@@ -111,10 +111,11 @@ enum CodeRepairs {
         return line
     }
 
-    /// `line` with `transform` applied to each stretch of code between strings, and before a comment. An unclosed quote
-    /// leaves the rest of the line alone.
-    static func outsideStringsAndComments(_ line: String, language: CodeLanguage, _ transform: (String) -> String) -> String {
-        var out = "", code = "", quote: Character?, escaped = false
+    /// `line` with `transform` applied to each stretch of code between strings, and before a comment. A quote still open
+    /// at the end of the line, usually a misread, leaves the rest alone, or counts as code when `unclosedIsCode`.
+    static func outsideStringsAndComments(_ line: String, language: CodeLanguage, unclosedIsCode: Bool = false,
+                                          _ transform: (String) -> String) -> String {
+        var out = "", code = "", quote: Character?, escaped = false, stringStart = line.startIndex, outBeforeString = ""
         var index = line.startIndex
         while index < line.endIndex {
             let character = line[index]
@@ -122,9 +123,12 @@ enum CodeRepairs {
                 out.append(character)
                 if escaped { escaped = false } else if character == "\\" { escaped = true } else if character == open { quote = nil }
             } else if "'\"`".contains(character) {
-                out += transform(code) + String(character)
+                out += transform(code)
+                outBeforeString = out
+                out += String(character)
                 code = ""
                 quote = character
+                stringStart = index
             } else if (language != .braces && character == "#") || (language != .python && line[index...].hasPrefix("//")) {
                 return out + transform(code) + line[index...]
             } else {
@@ -132,7 +136,18 @@ enum CodeRepairs {
             }
             index = line.index(after: index)
         }
+        if quote != nil, unclosedIsCode {
+            return outBeforeString + outsideStringsAndComments(String(line[line.index(after: stringStart)...]), language: language,
+                                                               unclosedIsCode: true, transform).withPrefix(String(line[stringStart]))
+        }
         return out + transform(code)
+    }
+
+    /// `line` without its strings and comments: what bracket counting looks at.
+    static func code(of line: String, language: CodeLanguage) -> String {
+        var code = ""
+        _ = outsideStringsAndComments(line, language: language, unclosedIsCode: true) { code += $0; return $0 }
+        return code
     }
 
     /// A line Vision read where a lone docstring `"""` stands: two to four junk marks (`… … …`, `Л Н Н`, `1 11 3`).
@@ -141,4 +156,8 @@ enum CodeRepairs {
         guard (2...4).contains(marks.count), !marks.contains(where: { "=(){}[]:;".contains($0) }) else { return false }
         return marks.allSatisfy { !($0.isASCII && $0.isLetter && !"lI".contains($0)) && !("02456789".contains($0)) }
     }
+}
+
+private extension String {
+    func withPrefix(_ prefix: String) -> String { prefix + self }
 }

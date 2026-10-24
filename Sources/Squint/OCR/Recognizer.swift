@@ -178,14 +178,21 @@ enum Recognizer {
         return columns.map { Int((Double($0) / Double(unit)).rounded()) * unit }
     }
 
+    /// An open bracket while rendering: which, the indent of the line it's on, and the closers of brackets opened just
+    /// before it on that line, which close with it (`})` for `forEach((x) => {`).
+    private struct Opener {
+        let bracket: Character
+        let indent: Int
+        var then = ""
+    }
+
     /// Slots -> text. Repairs `{` misread as `1`/`I`/`l`/`|` before an indented block, and fills rows Vision
     /// skipped: with the closer for the innermost open bracket, or with a Python docstring's lone `"""`.
-    // ponytail: bracket counting ignores strings/comments and emits bare `}` (not `});`). Use a tokenizer once eval data shows it matters.
+    /// Brackets inside strings and comments aren't counted.
     static func render(_ slots: [Slot]) -> String {
         let pairs: [Character: Character] = ["{": "}", "(": ")", "[": "]"]
         let language = CodeLanguage.detect(slots.compactMap { if case .text(_, let text) = $0 { text } else { nil } })
-        var open: [Character] = []
-        var openedAt: [Int] = [] // the indent of the line each open bracket is on
+        var open: [Opener] = []
         var lines: [String] = []
         var inDocstring = false
         var previousText: String?
@@ -199,13 +206,13 @@ enum Recognizer {
                 if inDocstring || opensDocstring {
                     lines.append(padding + "\"\"\"")
                     inDocstring.toggle()
-                } else {
+                } else if let opener = open.popLast(), let closer = pairs[opener.bracket] {
                     // The closer for the innermost open bracket, lined up with the line that opened it. Measured ink
                     // tends to sit too far right, and a misread opener can leave the wrong one open: the smaller wins.
-                    let opener = language == .unknown ? nil : openedAt.last.map { min($0, indent) }
-                    let closer = open.popLast().flatMap { pairs[$0] }
-                    openedAt = Array(openedAt.prefix(open.count))
-                    lines.append(closer.map { (opener.map { String(repeating: " ", count: $0) } ?? padding) + String($0) } ?? "")
+                    let column = language == .unknown ? indent : min(opener.indent, indent)
+                    lines.append(String(repeating: " ", count: column) + String(closer) + opener.then)
+                } else {
+                    lines.append("")
                 }
             case .text(var indent, var text):
                 let opensBlock = slots[(index + 1)...].lazy.compactMap(\.indent).first.map { $0 > indent } ?? false
@@ -220,46 +227,52 @@ enum Recognizer {
                 if language == .braces, !inDocstring {
                     // `=> {` read as `=>` or `>`, with the block on the next line.
                     if opensBlock, let arrow = text.firstMatch(of: /\)\s=?>$/) { text.replaceSubrange(arrow.range, with: ") => {") }
-                    // `} catch {` and `} else {` read without their `}`.
-                    // Whether a block follows is judged from the `}`'s own indent, the opener's, not Vision's.
-                    if open.last == "{", let opener = openedAt.last, text.firstMatch(of: /^(catch|else|finally)\b/) != nil {
+                    // `} catch {` and `} else {` read without their `}`. Whether a block follows is judged from the
+                    // `}`'s own indent, the opener's, not Vision's.
+                    if let top = open.last, top.bracket == "{", text.firstMatch(of: /^(catch|else|finally)\b/) != nil {
                         text = "} " + text
                         let next = slots[(index + 1)...].lazy.compactMap(\.indent).first
-                        if let next, next > opener, !text.hasSuffix("{") { text += " {" }
+                        if let next, next > top.indent, !text.hasSuffix("{") { text += " {" }
                     }
                 }
                 // A lone `}` misread as `8`, `)` or `]` while the innermost open bracket is a brace.
-                if open.last == "{", ["8", ")", "]"].contains(text) {
+                if open.last?.bracket == "{", ["8", ")", "]"].contains(text) {
                     text = "}"
                 }
                 text = repairingCodeMisreads(repairingSquareBrackets(text))
                 if !inDocstring { text = CodeRepairs.repairing(text, language: language) }
-                // A line that starts by closing the innermost bracket lines up with the line that opened it.
-                if let first = text.first, let top = open.last, pairs[top] == first, let opener = openedAt.last,
-                   language != .unknown {
-                    indent = opener
+                // A line that starts by closing the innermost bracket lines up with the line that opened it, and a lone
+                // `}` gets the closers that close with it (`})`).
+                if let first = text.first, let top = open.last, pairs[top.bracket] == first, language != .unknown {
+                    indent = top.indent
+                    if text == "}" { text += top.then }
                 }
+                let code = inDocstring ? "" : CodeRepairs.code(of: text, language: language)
                 var floor = open.count
-                for character in text {
+                for character in code {
                     if pairs[character] != nil {
-                        open.append(character)
-                        openedAt.append(indent)
-                    } else if let top = open.last, pairs[top] == character {
+                        open.append(Opener(bracket: character, indent: indent))
+                    } else if let top = open.last, pairs[top.bracket] == character {
                         open.removeLast()
-                        openedAt.removeLast()
                         floor = min(floor, open.count)
                     }
                 }
-                // A `(` or `[` left open mid-line is most likely a misread closer. Keep `{` and a trailing
-                // opener (a multi-line call or literal), so one misread can't change which closers get restored.
+                // A `(` or `[` left open mid-line is most likely a misread closer. Keep `{` and a trailing opener (a
+                // multi-line call or literal), so one misread can't change which closers get restored. A `(` or `[`
+                // just before a trailing `{` in a callback or argument (`forEach((x) => {`, `foo({`) closes with it.
                 let trailing = text.last { !$0.isWhitespace }
-                let opened = open[floor...]
+                let opened = Array(open[floor...])
                 open.removeSubrange(floor...)
-                let kept = opened.indices.filter { i in opened[i] == "{" || (i == opened.endIndex - 1 && opened[i] == trailing) }
-                let keptAt = kept.map { openedAt[$0] }
-                openedAt.removeSubrange(floor...)
-                open += kept.map { opened[$0] }
-                openedAt += keptAt
+                for (offset, opener) in opened.enumerated() {
+                    if opener.bracket == "{" || (offset == opened.count - 1 && opener.bracket == trailing) {
+                        var kept = opener
+                        if offset == opened.count - 1, opener.bracket == "{", trailing == "{", language == .braces,
+                           code.contains(/=>|function|\(\{|\[\{/) {
+                            kept.then = String(opened[..<offset].reversed().filter { $0.bracket != "{" }.compactMap { pairs[$0.bracket] })
+                        }
+                        open.append(kept)
+                    }
+                }
                 if text.ranges(of: "\"\"\"").count % 2 == 1 {
                     inDocstring.toggle()
                 }

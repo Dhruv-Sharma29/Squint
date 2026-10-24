@@ -79,6 +79,19 @@ struct CodeRepairsTests {
             """)
     }
 
+    @Test func restoresCombinedClosersAndIgnoresBracketsInStrings() {
+        // A callback's `})` that Vision skipped; the `(` and `{` in the string and comment don't count.
+        let slots: [Slot] = [
+            .text(indent: 0, "items.forEach((item) => {"),
+            .text(indent: 2, "log('opening ({[ brackets') // and ( here"),
+            .ink(indent: 0),
+            .text(indent: 0, "run()"),
+        ]
+        #expect(Recognizer.render(slots) == "items.forEach((item) => {\n  log('opening ({[ brackets') // and ( here\n})\nrun()")
+        // A line cut short before its `})` doesn't make the next brace close twice.
+        #expect(CodeRepairs.code(of: "  return read({ prompt: 'a(b' ", language: .braces) == "  return read({ prompt:  ")
+    }
+
     @Test func readsJunkWhereADocstringQuoteStands() {
         let slots: [Slot] = [
             .text(indent: 0, "def area(self):"),
