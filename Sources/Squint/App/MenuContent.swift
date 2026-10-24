@@ -12,6 +12,12 @@ struct MenuContent: View {
             .disabled(model.isBusy)
         Button("Read Clipboard Image", systemImage: "doc.on.clipboard", action: readClipboard)
             .disabled(model.isBusy)
+        if let scrolled = model.scrollCapture {
+            let lines = scrolled.isEmpty ? 0 : scrolled.split(separator: "\n", omittingEmptySubsequences: false).count
+            Button("Finish Scroll Capture (\(lines) lines)", systemImage: "stop.circle", action: model.finishScrollCapture)
+        } else {
+            Button("Start Scroll Capture", systemImage: "arrow.down.doc", action: model.startScrollCapture)
+        }
         // A Toggle's tick goes in the menu's state column, left of the icons above. Drawing it as the item's
         // icon lines it up with them; the title stays aligned either way.
         Button {

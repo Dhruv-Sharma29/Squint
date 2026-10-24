@@ -15,6 +15,10 @@ final class CaptureModel {
     let preferences: Preferences
     private(set) var status = Status.idle
     private(set) var hotKeyAvailable = false
+    /// The text of the scroll capture under way, or nil when none is. Each capture is added to it by the lines they
+    /// share (`ScrollMerge`), and the whole is copied.
+    private(set) var scrollCapture: String?
+
     /// True from the moment a capture starts until its text is copied; a second request meanwhile is ignored.
     private(set) var isBusy = false
 
@@ -118,6 +122,17 @@ final class CaptureModel {
         }
     }
 
+    /// Starts a scroll capture: capture, scroll, capture again, and the parts are joined without repeating lines.
+    func startScrollCapture() {
+        scrollCapture = ""
+        announce(String(localized: "Scroll capture started. Capture, scroll, and capture again."))
+    }
+
+    func finishScrollCapture() {
+        scrollCapture = nil
+        announce(String(localized: "Scroll capture finished"))
+    }
+
     func open(_ url: URL) async {
         switch LinkCommand(url) {
         case .capture(let code): await capture(code: code)
@@ -147,7 +162,9 @@ final class CaptureModel {
                 fail(String(localized: "No text found. Try a larger area."))
                 return nil
             }
-            let text = code && preferences.copyAsMarkdown ? MarkdownFence.wrapping(read) : read
+            let whole = scrollCapture.map { ScrollMerge.merging($0, read) } ?? read
+            if scrollCapture != nil { scrollCapture = whole }
+            let text = code && preferences.copyAsMarkdown ? MarkdownFence.wrapping(whole) : whole
             pasteboard.clearContents()
             pasteboard.setString(text, forType: .string)
             status = .copied

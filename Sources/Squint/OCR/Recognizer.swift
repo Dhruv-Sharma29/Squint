@@ -194,6 +194,7 @@ enum Recognizer {
         let pairs: [Character: Character] = ["{": "}", "(": ")", "[": "]"]
         let language = CodeLanguage.detect(slots.compactMap { if case .text(_, let text) = $0 { text } else { nil } })
         var open: [Opener] = []
+        let leftmostText = slots.compactMap { if case .text(let indent, _) = $0 { indent } else { nil } }.min() ?? 0
         var lines: [String] = []
         var inDocstring = false
         var docstringIndent = 0 // where the open docstring's `"""` is
@@ -217,6 +218,10 @@ enum Recognizer {
                     // tends to sit too far right, and a misread opener can leave the wrong one open: the smaller wins.
                     let column = language == .unknown ? indent : min(opener.indent, indent)
                     lines.append(String(repeating: " ", count: column) + String(closer) + opener.then)
+                } else if language == .braces, indent < leftmostText {
+                    // Nothing open explains it, but it's left of all the text: the end of a block that opened before
+                    // the capture (scroll capture's later parts). A lone glyph Vision skipped in brace code is a `}`.
+                    lines.append(padding + "}")
                 } else {
                     lines.append("")
                 }
@@ -325,9 +330,15 @@ enum Recognizer {
 
     /// Lays rows on a line grid: gaps become blank rows, or `.ink` rows when pixels show a glyph Vision skipped.
     /// The distance between consecutive lines: the median gap between rows.
+    /// The median gap between rows. With only one or two gaps the median is the larger, which hid a skipped line between
+    /// rows one and two lines apart, so small captures take the smallest gap not below 0.8 of a row's height.
+    // Measured: the smallest gap for every capture made five development images worse.
     private static func linePitch(_ rows: [[TextBox]]) -> Double {
         let mids = rows.map { Double($0[0].rect.midY) }
-        return median(zip(mids, mids.dropFirst()).map { $0 - $1 })
+        let gaps = zip(mids, mids.dropFirst()).map { $0 - $1 }
+        guard gaps.count <= 2 else { return median(gaps) }
+        let height = median(rows.flatMap { $0 }.map { Double($0.rect.height) })
+        return gaps.filter { $0 >= 0.8 * height }.min() ?? median(gaps)
     }
 
     private static func slots(_ rows: [[TextBox]], ink: InkMap?, scanFrom: Double, pitch: Double) -> [Slot] {

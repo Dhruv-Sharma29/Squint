@@ -68,6 +68,17 @@ The same actions are in the **Shortcuts** app under Squint, and each one **retur
 
 If the actions still don't show up, open Squint once and wait a moment while macOS indexes it. Type `squint`, not `squint://`: with the slashes, Spotlight treats it as a web address.
 
+## Scroll capture
+
+For code longer than the screen, such as a long file in a tutorial video:
+
+1. Choose **Start Scroll Capture** from the Squint menu.
+2. Capture the first part as usual, scroll, and capture the next part, overlapping by a line or two.
+3. Each capture is joined to the text so far by the lines both show, without repeating them, and the whole is on the clipboard after every capture.
+4. Choose **Finish Scroll Capture** when you're done.
+
+If two parts share no lines, the second simply follows the first.
+
 ## QR codes and barcodes
 
 Select a QR code or barcode, and its contents (for example a URL) are copied. If the selection contains a code, the code's contents take priority over any text around it, so select just the code.

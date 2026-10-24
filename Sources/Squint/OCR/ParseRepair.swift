@@ -65,11 +65,6 @@ enum ParseRepair {
                 kinds[text[offset]]!.map { text.replacingCharacters(in: offset...offset, with: String($0)) }
             }
             for swap in swaps.filter(matched) + swaps.filter({ !matched($0) }) { with(index, swap) }
-            // A line cut short after an operator: drop the operator, close what the line opened.
-            if let dangling = text.firstMatch(of: /\s*(\|\||&&|\+|-|\*|,)\s*$/) {
-                let kept = String(text[..<dangling.range.lowerBound])
-                with(index, kept + closers(for: kept))
-            }
             if language == .braces, text.wholeMatch(of: /\s*[A-Za-z][\w,.']*(\s+[\w,.']+){2,}\s*/) != nil {
                 // A comment whose `//` Vision dropped: prose where code should be.
                 let indent = text.prefix { $0 == " " }
@@ -90,16 +85,12 @@ enum ParseRepair {
                 if text.firstMatch(of: /^\s*(def|class|if|elif|else|for|while|with|try|except|finally)\b[^:]*$/) != nil { with(index, text + ":") }
             }
         }
-        // Parsers often stop far below a cut-off string or a missing closer, so those are tried on every line, and the
-        // closers the whole snippet still needs are tried at its end.
+        // Parsers often stop far below a cut-off string, so closing one is tried on every line. Nothing that isn't on
+        // screen is added, such as closers for a capture that ends mid-function: those would make partial code parse.
         for index in lines.indices where index != line - 1 && index != line - 2 {
             for quote in ["'", "\""] where lines[index].count(where: { String($0) == quote }) % 2 == 1 {
                 with(index, lines[index] + quote + closers(for: lines[index]))
             }
-        }
-        let missing = closers(for: lines.joined(separator: "\n"))
-        if !missing.isEmpty, language == .braces {
-            out.append((lines + missing.map { String($0) }).joined(separator: "\n"))
         }
         // Python docstrings: every `"""` misread as another mix of quotes, fixed together (one alone never parses), and a
         // docstring opened by a lone `"` right after a `def` or `class`.

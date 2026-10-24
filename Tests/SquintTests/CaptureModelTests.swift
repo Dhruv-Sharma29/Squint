@@ -77,6 +77,20 @@ struct CaptureModelTests {
         #expect(await model.capture(code: false)?.hasPrefix("```") == false) // Plain Mode stays plain
     }
 
+    @Test func scrollCaptureCopiesTheWholeJoinedText() async throws {
+        defer { pasteboard.releaseGlobally() }
+        var page = "function sum(arr) {\n  let total = 0;\n  for (const x of arr) {"
+        let model = try makeModel { try CodeImage.write(page) }
+        model.startScrollCapture()
+        await model.capture()
+        page = "  for (const x of arr) {\n    total += x;\n  }\n  return total;\n}"
+        let joined = await model.capture()
+        #expect(joined == "function sum(arr) {\n  let total = 0;\n  for (const x of arr) {\n    total += x;\n  }\n  return total;\n}")
+        #expect(pasteboard.string(forType: .string) == joined)
+        model.finishScrollCapture()
+        #expect(model.scrollCapture == nil)
+    }
+
     @Test func linksOtherThanWebAddressesNeverOpen() {
         #expect(CaptureModel.firstLink(in: "see file:///etc/passwd or mailto:a@b.co") == nil)
         #expect(CaptureModel.firstLink(in: "x file:///tmp then http://example.org/a") == URL(string: "http://example.org/a"))
