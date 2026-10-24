@@ -13,10 +13,10 @@
 | | |
 |---|---|
 | macOS | 14 Sonoma or later |
-| Toolchain | Xcode 16+ or Command Line Tools with Swift 6.0+ (`xcode-select --install`) |
+| Toolchain | Xcode 16.4+ or Command Line Tools with Swift 6.1+ (`xcode-select --install`) |
 | Homebrew | Any current version |
 
-> Squint has been built and tested with Swift 6.4 on macOS 27 (Apple silicon). Older toolchains and Intel Macs are expected to work but are not yet tested.
+> Squint is built and tested on every push with Swift 6.1 on macOS 15 (GitHub Actions), and developed with Swift 6.4 on macOS 27, both on Apple silicon. Intel Macs are expected to work but aren't tested.
 
 ## Install with Homebrew (recommended)
 
@@ -44,7 +44,7 @@ brew services start squint
 open "$(brew --prefix)/opt/squint/Squint.app"
 ```
 
-Squint lives in the menu bar (look for an eye inside a viewfinder) and has no Dock icon.
+Squint lives in the menu bar (look for an eye inside a viewfinder) and has no Dock icon. You can also turn on **Open at login** in Squint's Settings instead of using `brew services`; use one or the other, not both.
 
 ### Why build from source instead of a cask?
 
@@ -95,7 +95,8 @@ tccutil reset ScreenCapture io.github.dhruv-sharma29.squint   # optional: forget
 | Symptom | Fix |
 |---|---|
 | Permission is granted, but captures come back empty or show only the wallpaper | The permission belongs to an older build. Remove Squint from the Screen Recording list (or run the `tccutil` command above), then capture again. |
-| The menu says **⌘⇧2 is in use by another app** | Another app (for example TextSniper) owns that shortcut. Capture from the menu, or bind a `squint://capture` link to any shortcut; see [Usage](usage.md#links-and-automation). |
+| The menu says your shortcut **is in use by another app** | Another app (for example TextSniper, which also defaults to ⌘⇧2) owns it. Choose a different one in **Settings… › Shortcut**. |
+| Squint's actions don't appear in Spotlight | Open Squint once and give macOS a minute to index it. Moving `Squint.app` into Applications helps. Builds made with an older checkout may lack `Metadata.appintents`; rebuild with `./bundle.sh`. |
 | `squint://` links do nothing | macOS registers the link scheme when the app first launches. Open Squint once, then try again. |
 | The first capture works but later ones fail with a Vision error | The TRex project reported a macOS 27 regression in Apple's legacy text-recognition API. It could not be reproduced on macOS 27.0.1 (24 recognitions in one process). If you hit it, please open an issue with your exact macOS version. |
-| `brew install` fails while compiling | Check that `swift --version` reports 6.0 or later. If it doesn't, install current Command Line Tools with `xcode-select --install`. |
+| `brew install` fails while compiling | Check that `swift --version` reports 6.1 or later. If it doesn't, install current Command Line Tools with `xcode-select --install`. |

@@ -3,6 +3,7 @@
 - [Getting started](#getting-started)
 - [Conventions](#conventions)
 - [Testing](#testing)
+- [App Intents metadata](#app-intents-metadata)
 - [Screen Recording permission during development](#screen-recording-permission-during-development)
 - [Releasing a new version](#releasing-a-new-version)
 - [Testing the formula before a release](#testing-the-formula-before-a-release)
@@ -43,26 +44,30 @@ The menu bar shows a monochrome version of the logo: an eye with `</>` inside a 
 ## Conventions
 
 - **Swift 6 language mode** with strict concurrency. The build must have no warnings.
-- **One type per file**, in folders organised by feature (`App/`, `Capture/`, `OCR/`, `Eval/`).
+- **One type per file**, in folders organised by feature (`App/`, `App/Intents/`, `Capture/`, `OCR/`, `Eval/`).
 - **State:** `@MainActor @Observable` classes, not `ObservableObject`.
 - **No third-party dependencies** without discussion. The whole app runs on system frameworks.
 - **Deliberate simplifications** carry a `ponytail:` comment naming the limit and how to improve on it. Search for them before changing an algorithm:
   ```sh
   grep -rn "ponytail:" Sources
   ```
-- **Accuracy changes need evidence.** Run `squint eval` before and after, and include both results in the pull request.
+- **Accuracy changes need evidence.** Develop against the dev set (`python3 bench/make_dataset.py --dev`), never the test set. When the change is done, run the test set once and include before and after results in the pull request. See [`bench/`](../bench/README.md).
 
 ## Testing
 
-| Test | Covers |
+23 tests in 5 suites, written with Swift Testing. CI runs them on every push ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), together with a build and a signed bundle.
+
+| Suite | Covers |
 |---|---|
-| `indentsSnapToSmallestStep` | Indent-step detection and snapping |
-| `renderRepairsBracesVisionMissed` | `{`-misread repair, closing brackets restored from ink, trailing blank trimming |
-| `renderLeavesPythonAlone` | No brace "repair" in brace-free code |
-| `readsQRCode` | Generates a QR code with Core Image and reads it back |
-| `metrics` | Edit distance and exact-line scoring |
+| `RecognizerTests` | Indent snapping; restoring brackets and docstring quotes Vision skipped; `{` and `]` misreads; a misread can't change later closers; line-number gutter removal, and code that merely starts with numbers is left alone; reading a QR code; metrics |
+| `ShortcutTests` | Recording a shortcut from a key press, rejecting plain keys, named keys, display order, encoding |
+| `PreferencesTests` | Defaults for new users; every setting survives a relaunch |
+| `LinkCommandTests` | `squint://` link parsing, including case and unknown links |
+| `ClipboardImageTests` | Image data, image files copied in Finder (regression: Squint used to read the file's icon), and text-only clipboards. Uses a private pasteboard, so tests never touch the real clipboard. |
 
 The first test that calls Vision in a fresh process can take about 25 seconds while macOS compiles the model. Later runs take milliseconds.
+
+Not covered by automated tests: the capture flow itself (it needs the system selection UI and Screen Recording permission), the Settings window, and Spotlight. Check those by hand before a release.
 
 For end-to-end accuracy, use `squint eval` on a benchmark folder; see [Evaluation](evaluation.md).
 
@@ -77,6 +82,16 @@ swiftc Sources/Squint/App/MenuBarIcon.swift scripts/ReadmeMedia/main.swift -o .b
 ```
 
 The script renders a code frame, runs the release `Squint` binary on it in both modes, scores the results with `squint eval`, and draws the images from those outputs. The demo's windows and selection animation are illustrations of the flow, but the pasted text is exactly what Squint produced.
+
+## App Intents metadata
+
+Spotlight, Siri and Shortcuts find Squint's actions through `Assets/Metadata.appintents`. Xcode generates this only for app targets, not for Swift-package executables, so `scripts/app-intents-metadata.sh` runs the same two steps directly: the compiler extracts constant values from the sources, then Apple's `appintentsmetadataprocessor` exports the metadata. Run it whenever anything in `Sources/Squint/App/Intents` changes, and commit the result:
+
+```sh
+scripts/app-intents-metadata.sh   # needs Xcode, not only the Command Line Tools
+```
+
+The output is committed so Homebrew builds without Xcode still include it.
 
 ## Screen Recording permission during development
 

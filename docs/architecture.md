@@ -10,9 +10,11 @@
 ## Pipeline
 
 ```text
- ⌘⇧2 · menu · squint://capture          squint://clipboard · menu
+ shortcut · menu · Spotlight ·          Read Clipboard Image ·
+ Shortcuts · squint://capture           squint://clipboard
             │                                     │
-   screencapture -i (system UI)          clipboard PNG/TIFF
+   screencapture -i (system UI)     image file copied in Finder,
+            │                       else clipboard PNG/TIFF
             └──────────────┬──────────────────────┘
                            ▼
                 temporary image file
@@ -25,7 +27,8 @@
                 group text boxes into rows
                            │
           Plain Mode ──────┼────── Code Mode
-     join rows with spaces │   lay rows on a line grid
+     join rows with spaces │   remove line-number gutter
+                           │   lay rows on a line grid
                            │   ─► Slots ─► render
                            ▼
        clipboard  ·  temporary image deleted
@@ -40,38 +43,51 @@ Folders are organised by feature, with one type per file.
 | Path | Responsibility |
 |---|---|
 | `Sources/Squint/main.swift` | Entry point: no arguments starts the app, any arguments run the CLI |
-| `App/SquintApp.swift` | SwiftUI `MenuBarExtra` scene |
-| `App/AppDelegate.swift` | Owns the model and receives `squint://` links |
-| `App/CaptureModel.swift` | `@MainActor @Observable` state and the capture → recognize → copy flow |
+| `App/SquintApp.swift` | SwiftUI `MenuBarExtra` and `Settings` scenes |
+| `App/AppDelegate.swift` | Owns the model, receives `squint://` links, and shares the model with App Intents |
+| `App/CaptureModel.swift` | `@MainActor @Observable` state and the capture → recognize → copy flow; one capture at a time |
+| `App/Preferences.swift` | Settings saved to `UserDefaults` |
+| `App/Shortcut.swift` | A global shortcut: Carbon key code and modifiers, display name, menu key equivalent |
+| `App/ShortcutRecorder.swift` | Records a new shortcut in Settings |
+| `App/SettingsView.swift` | The Settings window |
+| `App/LaunchAtLogin.swift` | Open at login through `SMAppService` |
+| `App/LinkCommand.swift` | Parses `squint://` links |
 | `App/MenuContent.swift` | Menu items |
 | `App/MenuBarIcon.swift` | The logo as a monochrome menu bar template image, drawn in code |
-| `App/HotKey.swift` | Global ⌘⇧2 through Carbon `RegisterEventHotKey` |
+| `App/HotKey.swift` | The global shortcut through Carbon `RegisterEventHotKey` |
+| `App/Intents/` | Four App Intents and the `AppShortcutsProvider` behind Spotlight, Siri and Shortcuts |
 | `Capture/ScreenCapture.swift` | Runs `screencapture -i` and returns the captured image file |
-| `Capture/ClipboardImage.swift` | Writes a clipboard image to a temporary file |
-| `OCR/Recognizer.swift` | Vision requests, row grouping and the code-layout pass |
+| `Capture/ClipboardImage.swift` | Copies a clipboard image, or an image file copied in Finder, to a temporary file |
+| `OCR/Recognizer.swift` | Vision requests, row grouping, line-number removal and the code-layout pass |
+| `OCR/TextBox.swift` | One run of recognized text and its bounds |
 | `OCR/Slot.swift` | One output row: text, unreadable ink, or blank |
 | `OCR/InkMap.swift` | Pixel access used to find glyphs Vision skipped |
 | `Eval/Metrics.swift` | Edit distance, character error rate, exact-line rate |
 | `Eval/CLI.swift` | `squint <image>` and `squint eval` |
 | `Formula/squint.rb` | Homebrew formula |
 | `bundle.sh` | Assembles and ad-hoc signs `Squint.app` |
-| `Assets/` | App icon: the `AppIcon.icon` source plus compiled `Assets.car` and `AppIcon.icns` (see [Development](development.md#app-icon)) |
+| `Assets/` | App icon (the `AppIcon.icon` source plus compiled `Assets.car` and `AppIcon.icns`) and App Intents metadata (`Metadata.appintents`); see [Development](development.md#app-icon) |
+| `scripts/` | Regenerates App Intents metadata and the README media |
+| `bench/` | The accuracy benchmark; see [Evaluation](evaluation.md) |
+| `.github/workflows/ci.yml` | Builds, tests and bundles on every push |
 
 ## The code-layout pass
 
 Vision returns a list of text boxes. Each box is one recognized string with a bounding box in normalized coordinates, with the origin at the bottom-left. Code Mode turns those boxes back into source code in seven steps.
 
-1. **Group into rows.** Boxes whose vertical centres are within half a box height of each other form one row, ordered left to right.
-2. **Estimate character width.** For each box with at least 4 characters, divide its width by its character count. The median is the character width. This assumes a monospaced font.
-3. **Estimate line pitch.** The median vertical distance between consecutive rows. A gap of *n* pitches between two rows means *n − 1* rows are missing.
-4. **Check missing rows for ink.** For each missing row, `InkMap` scans a band 0.4 × the median text height either side of where the row should be. It looks for pixels that differ from the background by more than 64/255 in any channel. The same check runs below the last recognized row. A row with ink becomes `.ink`, meaning there is a glyph Vision didn't read. A row without ink becomes `.blank`.
-5. **Compute indentation.** Each row's left edge, relative to the leftmost row, is divided by the character width and rounded to whole columns. The smallest non-zero indent is taken as the indent step, and every indent is snapped to a multiple of it. This absorbs measurement error at deeper nesting levels.
-6. **Rebuild spacing within a row.** The gap between neighbouring boxes on one row becomes the matching number of spaces, so aligned comments keep their alignment.
-7. **Render.** Walk the slots top to bottom, keeping a stack of open brackets (`{`, `(`, `[`):
+1. **Group into rows.** Boxes whose vertical centres are within half a box height of each other form one row, ordered left to right. If Vision merged an editor line number with the code after it ("12  return x"), the number is split off using the candidate's own character geometry.
+2. **Remove a line-number gutter.** If at least half the rows start with an integer, those integers mostly increase, and they end at about the same x (a right-aligned column), the column is removed, including misread numbers such as `l7`. Line spacing is measured *before* removal, because rows that held only a number still mark where a line is.
+3. **Estimate character width.** For each box with at least 4 characters, divide its width by its character count. The median is the character width. This assumes a monospaced font.
+4. **Estimate line pitch.** The median vertical distance between consecutive rows. A gap of *n* pitches between two rows means *n − 1* rows are missing.
+5. **Check missing rows for ink.** For each missing row, `InkMap` scans a band 0.4 × the median text height either side of where the row should be. It looks for pixels that differ from the background by more than 64/255 in any channel. The same check runs below the last recognized row. A row with ink becomes `.ink`, meaning there is a glyph Vision didn't read. A row without ink becomes `.blank`. With a gutter, the scan starts right of it, so line numbers never count as ink.
+6. **Compute indentation.** Each row's left edge, relative to the leftmost row, is divided by the character width and rounded to whole columns. The smallest non-zero indent is taken as the indent step, and every indent is snapped to a multiple of it. This absorbs measurement error at deeper nesting levels.
+7. **Rebuild spacing within a row.** The gap between neighbouring boxes on one row becomes the matching number of spaces, so aligned comments keep their alignment.
+8. **Render.** Walk the slots top to bottom, keeping a stack of open brackets (`{`, `(`, `[`):
    - A text row ending in ` 1`, ` I`, ` l` or ` |` that is followed by a more-indented row gets that character replaced by `{`. This is Vision's most common brace misread.
    - On a row with more `[` than `]`, an `l` right after `[name` and before `;`, `.`, `)`, `,` or the line end becomes `]` (`item[keyl;` → `item[key];`).
    - A `(` or `[` still open in the middle of a row is treated as a misread and dropped from the stack. Only `{` and an opener at the very end of a row (a multi-line call or literal) stay open, so one misread can't change which closers are restored further down.
    - An `.ink` row becomes the closer for the innermost open bracket, at its measured indent.
+   - An `.ink` row right after a Python `def` or `class` line opens a docstring with `"""`, and the next `.ink` row closes it. Vision skips a lone `"""` just as it skips a lone `}`.
    - Trailing blank rows are dropped.
 
 ### Evidence behind these steps
@@ -83,6 +99,7 @@ Vision returns a list of text boxes. Each box is one recognized string with a bo
 | Autocorrect damages code | Plain Mode output turned `fib(n):` into `fib (n) :` |
 | `{` at the end of a line is read as `1` | Seen in `for (const x of arr) {` |
 | `]` is read as `l`, which used to turn restored `}` lines into `]` | Seen in `item[key];` and `groups[k].push(...)`; now covered by unit tests |
+| Line numbers were the largest error source | On the benchmark's test set, error rate on line-numbered images went from 13.9% to 6.1% after gutter removal; images without line numbers were unchanged. Developed on a separate dev set. |
 
 ## Concurrency
 
@@ -115,4 +132,6 @@ Deliberate simplifications are marked in the source with `ponytail:` comments. E
 - **Busy backgrounds:** ink detection uses the top-left pixel as the background colour, which suits flat editor themes but not gradients or photos.
 - **Mixed selections:** if a selection contains a QR code, its contents replace the text.
 - **Runs of spaces inside one Vision box** collapse to a single space, for example two spaces before an inline comment.
-- **Line-number gutters** are copied as text.
+- **Line numbers** are removed only when they form a right-aligned column of increasing numbers on at least half the rows. Left-aligned or sparse gutters are kept.
+- **Docstrings:** only a lone `"""` right after a `def` or `class` line is restored; other lone quotes come back as blank lines.
+- **Character misreads** Vision makes (`L` read as `l`, a missing space before `_`) are not corrected. They're the largest remaining error source on the benchmark.
