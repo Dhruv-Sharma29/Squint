@@ -218,16 +218,21 @@ def make_novel():
 def main():
     if "--novel" in sys.argv:
         return make_novel()
-    rng = random.Random(SEED)
-    (DATA / "truth").mkdir(parents=True, exist_ok=True)
+    # --dev: a development set for tuning, with a different seed and no snippet shared with the test set.
+    dev = "--dev" in sys.argv
+    out = DATA.parent / "data-dev" if dev else DATA
+    test_snippets = {path.read_text(encoding="utf-8").rstrip("\n") for path in (DATA / "truth").glob("*.txt")} if dev else set()
+    rng = random.Random(SEED + 100 if dev else SEED)
+    (out / "truth").mkdir(parents=True, exist_ok=True)
     manifest = []
     for language, extension, candidates, parses in [
         ("python", "py", python_snippets(), python_parses),
         ("javascript", "js", javascript_snippets(), javascript_parses),
     ]:
+        candidates = [(source, snippet) for source, snippet in candidates if snippet not in test_snippets]
         for number, (source, snippet) in enumerate(pick(candidates, parses, rng), start=1):
             item_id = f"{extension}-{number:02d}"
-            (DATA / "truth" / f"{item_id}.txt").write_text(snippet + "\n", encoding="utf-8")
+            (out / "truth" / f"{item_id}.txt").write_text(snippet + "\n", encoding="utf-8")
             manifest.append({
                 "id": item_id,
                 "language": language,
@@ -240,8 +245,8 @@ def main():
                 "padding": rng.randint(12, 40),
                 "condition": rng.choices(["screenshot", "video-1080p", "video-720p"], weights=[40, 35, 25])[0],
             })
-    (DATA / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-    print(f"{len(manifest)} snippets -> {DATA}")
+    (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    print(f"{len(manifest)} snippets -> {out}")
 
 
 if __name__ == "__main__":
