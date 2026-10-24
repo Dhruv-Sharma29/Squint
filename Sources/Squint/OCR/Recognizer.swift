@@ -11,7 +11,11 @@ enum Recognizer {
         let rect: CGRect
     }
 
-    static func text(at url: URL, code: Bool) throws -> String {
+    /// Vision language codes this Mac can recognize, for the Plain Mode language setting.
+    static let supportedLanguages: [String] = (try? VNRecognizeTextRequest().supportedRecognitionLanguages()) ?? []
+
+    /// - Parameter language: Plain Mode only; a Vision language code, or nil to detect the language automatically.
+    static func text(at url: URL, code: Bool, language: String? = nil) throws -> String {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
         else { throw CocoaError(.fileReadCorruptFile, userInfo: [NSFilePathErrorKey: url.path(percentEncoded: false)]) }
@@ -19,7 +23,11 @@ enum Recognizer {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = !code // English autocorrect mangles identifiers and symbols
-        request.automaticallyDetectsLanguage = !code // helps prose in other languages; code is mostly ASCII
+        if !code, let language {
+            request.recognitionLanguages = [language]
+        } else {
+            request.automaticallyDetectsLanguage = !code // helps prose in other languages; code is mostly ASCII
+        }
         let barcodes = VNDetectBarcodesRequest()
         try VNImageRequestHandler(cgImage: image).perform([request, barcodes])
 

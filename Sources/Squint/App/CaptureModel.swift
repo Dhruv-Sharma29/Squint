@@ -1,5 +1,4 @@
 import AppKit
-import Carbon.HIToolbox
 import Observation
 
 @MainActor @Observable
@@ -9,9 +8,11 @@ final class CaptureModel {
         case failed(String)
     }
 
-    var codeMode = true
+    let preferences: Preferences
     private(set) var status = Status.idle
     private(set) var hotKeyAvailable = false
+    /// True from the moment a capture starts until its text is copied; a second request meanwhile is ignored.
+    private(set) var isBusy = false
 
     /// SF Symbol shown briefly in place of the logo after a capture; nil while idle.
     var statusSymbol: String? {
@@ -22,74 +23,128 @@ final class CaptureModel {
         }
     }
 
-    init() {
-        hotKeyAvailable = HotKey.register(keyCode: kVK_ANSI_2, modifiers: cmdKey | shiftKey) { [weak self] in
-            Task { await self?.capture() }
-        }
+    init(preferences: Preferences = Preferences()) {
+        self.preferences = preferences
+        hotKeyAvailable = registerHotKey(preferences.shortcut)
     }
 
-    /// Select a screen region and copy its text. `code` overrides the Code Mode toggle.
+    /// Switches to `shortcut`. If another app already owns it, keeps the current one and returns false.
+    @discardableResult
+    func changeShortcut(to shortcut: Shortcut) -> Bool {
+        if registerHotKey(shortcut) {
+            preferences.shortcut = shortcut
+            hotKeyAvailable = true
+            return true
+        }
+        hotKeyAvailable = registerHotKey(preferences.shortcut)
+        return false
+    }
+
+    /// Pauses the global shortcut, so recording a new one doesn't trigger a capture.
+    func suspendShortcut() {
+        HotKey.unregister()
+    }
+
+    func resumeShortcut() {
+        hotKeyAvailable = registerHotKey(preferences.shortcut)
+    }
+
+    /// Select a screen region and copy its text. `code` overrides the Code Mode setting.
     func capture(code: Bool? = nil) async {
-        status = .idle
+        guard begin() else { return }
+        defer { isBusy = false }
         guard CGPreflightScreenCaptureAccess() else {
             CGRequestScreenCaptureAccess()
-            status = .failed(String(localized: "Allow Squint under System Settings › Privacy & Security › Screen Recording, then try again."))
+            // macOS applies a new Screen Recording permission only after the app restarts.
+            fail(String(localized: "Allow Squint under System Settings › Privacy & Security › Screen Recording, then quit and reopen Squint."))
             return
         }
         do {
-            guard let shot = try await ScreenCapture.region() else { return } // Esc pressed
-            await recognize(shot, code: code ?? codeMode)
-        } catch {
-            status = .failed(error.localizedDescription)
-        }
-    }
-
-    /// Copy the text in an image already on the clipboard, such as a screenshot copied from chat.
-    func readClipboard(code: Bool? = nil) async {
-        status = .idle
-        do {
-            guard let image = try ClipboardImage.file() else {
-                status = .failed(String(localized: "The clipboard has no image."))
+            guard let shot = try await ScreenCapture.region() else { // Esc pressed
+                status = .idle
                 return
             }
-            await recognize(image, code: code ?? codeMode)
+            await recognize(shot, code: code ?? preferences.codeMode)
         } catch {
-            status = .failed(error.localizedDescription)
+            fail(error.localizedDescription)
         }
     }
 
-    /// `squint://capture` or `squint://clipboard`, with optional `?mode=code` or `?mode=plain`.
+    /// Copy the text in an image already on the clipboard, or in an image file copied in Finder.
+    func readClipboard(code: Bool? = nil) async {
+        guard begin() else { return }
+        defer { isBusy = false }
+        do {
+            guard let image = try ClipboardImage.file() else {
+                fail(String(localized: "The clipboard has no image. Copy a screenshot or an image file, then try again."))
+                return
+            }
+            await recognize(image, code: code ?? preferences.codeMode)
+        } catch {
+            fail(error.localizedDescription)
+        }
+    }
+
     func open(_ url: URL) async {
-        let mode = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "mode" }?.value
-        let code = mode.map { $0 != "plain" }
-        switch url.host() {
-        case "capture": await capture(code: code)
-        case "clipboard": await readClipboard(code: code)
-        default: status = .failed(String(localized: "Unknown Squint link: \(url.absoluteString)"))
+        switch LinkCommand(url) {
+        case .capture(let code): await capture(code: code)
+        case .clipboard(let code): await readClipboard(code: code)
+        case nil: fail(String(localized: "Unknown Squint link: \(url.absoluteString)"))
+        }
+    }
+
+    private func begin() -> Bool {
+        guard !isBusy else { return false }
+        isBusy = true
+        status = .idle
+        return true
+    }
+
+    private func registerHotKey(_ shortcut: Shortcut) -> Bool {
+        HotKey.register(shortcut) { [weak self] in
+            Task { await self?.capture() }
         }
     }
 
     private func recognize(_ image: URL, code: Bool) async {
         do {
-            let text = try await Self.read(image, code: code)
+            let text = try await Self.read(image, code: code, language: preferences.language)
             guard !text.isEmpty else {
-                status = .failed(String(localized: "No text found."))
+                fail(String(localized: "No text found. Try selecting a larger area, or zoom in first."))
                 return
             }
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(text, forType: .string)
             status = .copied
+            let lines = text.split(separator: "\n", omittingEmptySubsequences: false).count
+            announce(String(localized: "Copied \(lines) lines"))
+            if preferences.playSound {
+                NSSound(named: "Tink")?.play()
+            }
             try? await Task.sleep(for: .seconds(1.5))
             if status == .copied { status = .idle }
         } catch {
-            status = .failed(error.localizedDescription)
+            fail(error.localizedDescription)
         }
+    }
+
+    private func fail(_ message: String) {
+        status = .failed(message)
+        announce(message)
+    }
+
+    /// VoiceOver feedback: the menu bar icon change alone isn't perceivable without sight.
+    private func announce(_ message: String) {
+        NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested, userInfo: [
+            .announcement: message,
+            .priority: NSAccessibilityPriorityLevel.high.rawValue,
+        ])
     }
 
     /// OCR off the main actor, then delete the image: it may hold private data.
     /// Plain `nonisolated async` rather than `@concurrent` keeps the package buildable with Swift 6.0 (Xcode 16 on macOS 14).
-    private nonisolated static func read(_ url: URL, code: Bool) async throws -> String {
+    private nonisolated static func read(_ url: URL, code: Bool, language: String?) async throws -> String {
         defer { try? FileManager.default.removeItem(at: url) }
-        return try Recognizer.text(at: url, code: code)
+        return try Recognizer.text(at: url, code: code, language: language)
     }
 }

@@ -15,5 +15,9 @@ struct SquintApp: App {
                 Image(nsImage: MenuBarIcon.image)
             }
         }
+
+        Settings {
+            SettingsView(model: appDelegate.model)
+        }
     }
 }
