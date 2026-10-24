@@ -23,7 +23,20 @@ jobs:
         run: swift build
 
       - name: Test
-        run: swift test
+        # Through a terminal, so progress streams live: a pipe holds it until exit, and a hang would print nothing.
+        # After 5 minutes (the suite takes seconds), print every thread's stack and fail.
+        run: |
+          swift build --build-tests
+          script -q /dev/null swift test --skip-build &
+          tests=$!
+          (for _ in $(seq 300); do sleep 1; done # short sleeps: killing this leaves no long-lived child holding the log open
+           echo "::error::Tests still running after 5 minutes. Stacks follow."
+           for pid in $(pgrep -f SquintPackageTests); do sudo sample "$pid" 2 -file /dev/stdout; done
+           pkill -f SquintPackageTests) &
+          watchdog=$!
+          status=0; wait $tests || status=$?
+          kill $watchdog 2>/dev/null || true
+          exit $status
 
       - name: Bundle the app
         run: ./bundle.sh && codesign --verify --strict build/Squint.app
