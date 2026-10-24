@@ -50,38 +50,43 @@ final class CaptureModel {
     }
 
     /// Select a screen region and copy its text. `code` overrides the Code Mode setting.
-    func capture(code: Bool? = nil) async {
-        guard begin() else { return }
+    /// Returns the copied text, or nil if the capture was cancelled or failed.
+    @discardableResult
+    func capture(code: Bool? = nil) async -> String? {
+        guard begin() else { return nil }
         defer { isBusy = false }
         guard CGPreflightScreenCaptureAccess() else {
             CGRequestScreenCaptureAccess()
             // macOS applies a new Screen Recording permission only after the app restarts.
             fail(String(localized: "Allow Squint under System Settings › Privacy & Security › Screen Recording, then quit and reopen Squint."))
-            return
+            return nil
         }
         do {
             guard let shot = try await ScreenCapture.region() else { // Esc pressed
                 status = .idle
-                return
+                return nil
             }
-            await recognize(shot, code: code ?? preferences.codeMode)
+            return await recognize(shot, code: code ?? preferences.codeMode)
         } catch {
             fail(error.localizedDescription)
+            return nil
         }
     }
 
     /// Copy the text in an image already on the clipboard, or in an image file copied in Finder.
-    func readClipboard(code: Bool? = nil) async {
-        guard begin() else { return }
+    @discardableResult
+    func readClipboard(code: Bool? = nil) async -> String? {
+        guard begin() else { return nil }
         defer { isBusy = false }
         do {
             guard let image = try ClipboardImage.file() else {
                 fail(String(localized: "The clipboard has no image. Copy a screenshot or an image file, then try again."))
-                return
+                return nil
             }
-            await recognize(image, code: code ?? preferences.codeMode)
+            return await recognize(image, code: code ?? preferences.codeMode)
         } catch {
             fail(error.localizedDescription)
+            return nil
         }
     }
 
@@ -106,12 +111,12 @@ final class CaptureModel {
         }
     }
 
-    private func recognize(_ image: URL, code: Bool) async {
+    private func recognize(_ image: URL, code: Bool) async -> String? {
         do {
             let text = try await Self.read(image, code: code, language: preferences.language)
             guard !text.isEmpty else {
                 fail(String(localized: "No text found. Try selecting a larger area, or zoom in first."))
-                return
+                return nil
             }
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(text, forType: .string)
@@ -121,10 +126,14 @@ final class CaptureModel {
             if preferences.playSound {
                 NSSound(named: "Tink")?.play()
             }
-            try? await Task.sleep(for: .seconds(1.5))
-            if status == .copied { status = .idle }
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                if status == .copied { status = .idle }
+            }
+            return text
         } catch {
             fail(error.localizedDescription)
+            return nil
         }
     }
 
