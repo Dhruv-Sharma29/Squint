@@ -6,7 +6,8 @@ import Testing
 /// Plain Mode with automatic detection, for someone who also reads Hindi.
 @Suite(.timeLimit(.minutes(1)))
 struct LanguageTests {
-    @Test func readsAnotherPreferredLanguageWhenDetectionIsUnsure() async throws {
+    @Test(.enabled(if: Recognizer.supportedLanguages.contains("hi-IN"), "Vision reads Hindi on newer macOS only"))
+    func readsAnotherPreferredLanguageWhenDetectionIsUnsure() async throws {
         // Detection picks English for a line that's mostly English words and drops the Devanagari.
         let mixed = try Self.render("आज का standup cancel है।", size: 14)
         defer { try? FileManager.default.removeItem(at: mixed) }
