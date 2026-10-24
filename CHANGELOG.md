@@ -7,6 +7,7 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 ### Added
 
 - **Custom words** in Settings: names and terms Squint spells exactly, correcting words one letter off (`Flaxmers` → `Flaxmere`). Vision's own custom-word option made no difference in testing, so Squint applies the list itself.
+- **Capture history** (off by default): the last 20 captures, kept only on this Mac and readable only by you, to copy again from the menu. Turning it off deletes them.
 - **Capture Table** (macOS 26 or later): copies a table as Markdown or tab-separated values, using Vision's document recognition, which read ruled, unruled and spreadsheet-style tables correctly in testing. Also `squint://table`.
 - **Scroll capture:** capture, scroll and capture again; the parts are joined by the lines they share, for code longer than the screen.
 - **Copy as Markdown:** optionally copies code in a fenced block tagged with its language.

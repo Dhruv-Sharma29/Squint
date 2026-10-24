@@ -117,6 +117,15 @@ struct SettingsView: View {
                                   detail: screenRecordingAllowed ? "Squint can see the area you select" : "Needed to capture. Reopen Squint after allowing it.",
                                   systemName: "rectangle.dashed.badge.record", color: .orange)
                 }
+                Toggle(isOn: $preferences.keepHistory) {
+                    SettingsLabel(title: "Keep history", detail: "The last \(CaptureHistory.limit) captures, only on this Mac. Off deletes them.",
+                                  systemName: "clock.arrow.circlepath", color: .indigo)
+                }
+                .onChange(of: preferences.keepHistory) { _, keep in model.setKeepHistory(keep) }
+                if preferences.keepHistory {
+                    Button("Clear History", action: model.history.clear)
+                        .disabled(model.history.entries.isEmpty)
+                }
                 Toggle(isOn: $preferences.showMenuBarIcon) {
                     SettingsLabel(title: "Show in menu bar", detail: "When hidden, open Squint again to see Settings",
                                   systemName: "menubar.rectangle", color: .gray)

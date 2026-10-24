@@ -13,6 +13,7 @@ final class CaptureModel {
     static let menuMessageLimit = 48
 
     let preferences: Preferences
+    let history: CaptureHistory
     private(set) var status = Status.idle
     private(set) var hotKeyAvailable = false
     /// The text of the scroll capture under way, or nil when none is. Each capture is added to it by the lines they
@@ -38,12 +39,14 @@ final class CaptureModel {
 
     /// The defaults are the real system; tests pass a private pasteboard and a stand-in for the selection overlay.
     init(preferences: Preferences = Preferences(),
+         history: CaptureHistory = CaptureHistory(),
          pasteboard: NSPasteboard = .general,
          screenAccess: @escaping @MainActor () -> Bool = CaptureModel.requestScreenAccess,
          captureRegion: @escaping @MainActor () async throws -> URL? = { try await ScreenCapture.region() },
          openLink: @escaping @MainActor (URL) -> Void = { NSWorkspace.shared.open($0) },
          registersHotKey: Bool = true) {
         self.preferences = preferences
+        self.history = history
         self.pasteboard = pasteboard
         self.screenAccess = screenAccess
         self.captureRegion = captureRegion
@@ -212,8 +215,20 @@ final class CaptureModel {
         }
     }
 
-    /// Puts `text` on the clipboard, with the sound and the menu bar tick that confirm it.
-    private func copy(_ text: String) {
+    /// Copies a capture from the history again.
+    func copyAgain(_ entry: CaptureHistory.Entry) {
+        copy(entry.text, remember: false)
+    }
+
+    /// Turns history on or off; off also deletes it, so nothing is kept.
+    func setKeepHistory(_ keep: Bool) {
+        preferences.keepHistory = keep
+        if !keep { history.clear() }
+    }
+
+    /// Puts `text` on the clipboard, with the sound and the menu bar tick that confirm it, and in the history if kept.
+    private func copy(_ text: String, remember: Bool = true) {
+        if remember, preferences.keepHistory { history.add(text) }
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
         status = .copied

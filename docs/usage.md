@@ -48,6 +48,7 @@ Open **Settings…** from the Squint menu (⌘,).
 | **Copy as Markdown** | Off by default. In Code Mode, copies the code in a fenced block with its language (` ```python `), ready for a README, a chat or an AI prompt. The language is left off when Squint isn't sure. |
 | **Open links** | Off by default. Opens the first web address (http or https) in the copied text. |
 | **Custom words** | Names and terms to spell exactly, separated by commas. A word one letter away from one of them, such as `Flaxmers` for `Flaxmere`, is corrected; words under four letters are left alone. |
+| **Keep history** | Off by default. Keeps the last 20 captures so you can copy one again from the menu's **History**. They're stored only on this Mac, in `~/Library/Application Support/Squint/history.json`, readable only by you. **Clear History** deletes them, and turning history off deletes them too. |
 | **Show in menu bar** | On by default. When hidden, use the shortcut or `squint://` links, and open Squint again (from Finder or Spotlight) to see Settings. |
 | **Open at login** | Adds Squint to System Settings › General › Login Items |
 

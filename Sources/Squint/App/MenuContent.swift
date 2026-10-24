@@ -35,6 +35,16 @@ struct MenuContent: View {
         }
         .accessibilityValue(preferences.codeMode ? Text("On") : Text("Off"))
 
+        if model.preferences.keepHistory, !model.history.entries.isEmpty {
+            Menu("History") {
+                ForEach(model.history.entries.prefix(10)) { entry in
+                    Button(Self.title(of: entry)) { model.copyAgain(entry) }
+                }
+                Divider()
+                Button("Clear History", action: model.history.clear)
+            }
+        }
+
         switch model.status {
         case .failed(let message):
             Divider()
@@ -56,6 +66,13 @@ struct MenuContent: View {
             .keyboardShortcut(",")
         Button("Quit Squint") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
+    }
+
+    /// A capture's first line with text, short enough for a menu.
+    static func title(of entry: CaptureHistory.Entry) -> String {
+        let line = entry.text.split(separator: "\n").first { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            .map { $0.trimmingCharacters(in: .whitespaces) } ?? ""
+        return line.count > 40 ? String(line.prefix(39)) + "…" : line
     }
 
     private func capture() {

@@ -27,6 +27,11 @@ final class Preferences {
         didSet { defaults.set(copyAsMarkdown, forKey: "copyAsMarkdown") }
     }
 
+    /// Off by default. Turning it off deletes the history (see `CaptureModel`).
+    var keepHistory: Bool {
+        didSet { defaults.set(keepHistory, forKey: "keepHistory") }
+    }
+
     /// How Capture Table copies a table.
     var tableFormat: TableReader.Format {
         didSet { defaults.set(tableFormat.rawValue, forKey: "tableFormat") }
@@ -74,6 +79,7 @@ final class Preferences {
         showMenuBarIcon = defaults.object(forKey: "showMenuBarIcon") as? Bool ?? true
         openFirstLink = defaults.bool(forKey: "openFirstLink")
         copyAsMarkdown = defaults.bool(forKey: "copyAsMarkdown")
+        keepHistory = defaults.bool(forKey: "keepHistory")
         tableFormat = defaults.string(forKey: "tableFormat").flatMap(TableReader.Format.init) ?? .markdown
         customWords = defaults.stringArray(forKey: "customWords") ?? []
         launchAtLogin = LaunchAtLogin.isEnabled
