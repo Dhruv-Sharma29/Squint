@@ -47,28 +47,49 @@ enum Recognizer {
         return render(slots(codeRows, ink: InkMap(image), scanFrom: gutterEnd, pitch: pitch))
     }
 
-    /// Removes an editor's line-number gutter: a left column of right-aligned, mostly increasing integers.
-    /// Returns the remaining rows and the gutter's right edge (0 without a gutter), so ink is only searched to its right.
+    /// Removes an editor's line-number gutter: at least two right-aligned, increasing integers at the far left, with all
+    /// the code starting clearly to their right. Vision often skips lone digits, so most rows may have no readable number;
+    /// the empty column is the stronger evidence. Returns the remaining rows and the gutter's right edge (0 without a
+    /// gutter), so ink is only searched to its right.
     static func removingLineNumbers(_ rows: [[TextBox]]) -> (rows: [[TextBox]], gutterEnd: Double) {
         let numbered = rows.compactMap { row in row.first.flatMap { Int($0.text) }.map { (value: $0, box: row[0]) } }
         let increasing = zip(numbered, numbered.dropFirst()).count { $0.value < $1.value }
         let height = median(rows.flatMap { $0 }.map { Double($0.rect.height) })
         let ends = numbered.map { Double($0.box.rect.maxX) }
-        guard numbered.count >= 3, Double(numbered.count) >= 0.5 * Double(rows.count),
-              Double(increasing) >= 0.8 * Double(numbered.count - 1),
+        guard numbered.count >= 2, Double(increasing) >= 0.8 * Double(numbered.count - 1),
               let gutterEnd = ends.max(), let first = ends.min(), gutterEnd - first < height // right-aligned column
         else { return (rows, 0) }
 
-        // Drop each row's leading box inside the gutter, including numbers Vision misread (such as "l7").
-        let code = rows.map { row in
-            guard let lead = row.first, Double(lead.rect.maxX) <= gutterEnd + height / 2, lead.text.count <= 4 else { return row }
-            return Array(row.dropFirst())
+        // A row's leading box inside the gutter: a line number, or one Vision misread (such as "l7"). A misread number
+        // Vision merged with the code ("lO  return x") is cut off the front of the box.
+        func inGutter(_ box: TextBox) -> Bool { Double(box.rect.maxX) <= gutterEnd + height / 2 && box.text.count <= 4 }
+        let code = rows.map { row -> [TextBox] in
+            guard let lead = row.first else { return row }
+            if inGutter(lead) { return Array(row.dropFirst()) }
+            if Double(lead.rect.minX) < gutterEnd, let rest = droppingMergedNumber(lead) { return [rest] + row.dropFirst() }
+            return row
         }
+        // The code must start clearly right of the gutter. If more than a few rows start at the number column, the
+        // numbers are part of the code (a few may be misreads Vision merged beyond recognition).
+        let atMargin = code.count { row in row.first.map { Double($0.rect.minX) - gutterEnd <= height / 2 } ?? false }
+        guard Double(atMargin) <= 0.2 * Double(code.count) else { return (rows, 0) }
         return (code.filter { !$0.isEmpty }, gutterEnd)
+    }
+
+    /// The box without a leading line-number-like token ("12", "l7", "1O") and the spaces after it. Its new left edge
+    /// assumes monospaced text.
+    private static func droppingMergedNumber(_ box: TextBox) -> TextBox? {
+        guard let match = box.text.firstMatch(of: /^[0-9lIOSB]{1,4}\s+(?=\S)/), match.0.contains(where: \.isNumber) else { return nil }
+        let fraction = Double(box.text.distance(from: box.text.startIndex, to: match.range.upperBound)) / Double(box.text.count)
+        let rect = CGRect(x: box.rect.minX + box.rect.width * fraction, y: box.rect.minY,
+                          width: box.rect.width * (1 - fraction), height: box.rect.height)
+        return TextBox(text: String(box.text[match.range.upperBound...]), rect: rect)
     }
 
     /// Vision sometimes merges a line number with the code after it ("12  return x"). Split it off, using the
     /// candidate's own character geometry, so gutter detection sees it. Without a gutter the pieces rejoin as before.
+    // Measured dead end: splitting every word this way to rebuild spacing from on-screen gaps raised the dev-set
+    // character error rate from 4.1% to 12.5%; Vision's word boxes in accurate mode are too approximate for that.
     private static func splittingLeadingNumber(_ candidate: VNRecognizedText, rect: CGRect) -> [TextBox] {
         let text = candidate.string
         guard let match = text.firstMatch(of: /^(\d{1,4})\s+(?=\S)/),
@@ -112,10 +133,14 @@ enum Recognizer {
                 }
             case .text(let indent, var text):
                 if let next = slots[(index + 1)...].lazy.compactMap(\.indent).first, next > indent,
-                   let last = text.last, "1Il|".contains(last), text.dropLast().hasSuffix(" ") {
+                   let last = text.last, "1Il|ft".contains(last), text.dropLast().hasSuffix(" ") {
                     text = text.dropLast() + "{"
                 }
-                text = repairingSquareBrackets(text)
+                // A lone `}` misread as `8`, `)` or `]` while the innermost open bracket is a brace.
+                if open.last == "{", ["8", ")", "]"].contains(text) {
+                    text = "}"
+                }
+                text = repairingCodeMisreads(repairingSquareBrackets(text))
                 var floor = open.count
                 for character in text {
                     if pairs[character] != nil {
@@ -153,6 +178,14 @@ enum Recognizer {
             line.replaceSubrange(match.range, with: "[\(match.1)]")
         }
         return line
+    }
+
+    /// Misreads that only one reading of code explains:
+    /// - a string quoted with `'` that contains `${` is a template literal, whose backticks Vision reads as `'`;
+    /// - `|l`, `l|`, `|I` or `I|` between spaces is `||`.
+    static func repairingCodeMisreads(_ line: String) -> String {
+        line.replacing(/'([^'`]*\$\{[^'`]*)'/) { "`\($0.1)`" }
+            .replacing(/\ (?:\|[lI]|[lI]\|)\ /, with: " || ")
     }
 
     /// Groups boxes into visual rows, top to bottom (Vision's origin is bottom-left).

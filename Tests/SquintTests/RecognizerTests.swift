@@ -60,6 +60,26 @@ struct RecognizerTests {
         #expect(Recognizer.render(slots) == "const xs = [\n  1,\n]")
     }
 
+    @Test func repairsCodeOnlyMisreads() {
+        #expect(Recognizer.repairingCodeMisreads("log('Found ${count} files')") == "log(`Found ${count} files`)")
+        #expect(Recognizer.repairingCodeMisreads("const s = 'cost: $5'") == "const s = 'cost: $5'") // no ${ }: a plain string
+        #expect(Recognizer.repairingCodeMisreads("default: password |l ''") == "default: password || ''")
+        #expect(Recognizer.repairingCodeMisreads("a l| b") == "a || b")
+        // Without a real `|`, "Il" could be an identifier, as here, so it is never touched.
+        #expect(Recognizer.repairingCodeMisreads("const Il = 1") == "const Il = 1")
+    }
+
+    @Test func restoresBracesMisreadAsOtherGlyphs() {
+        let slots: [Slot] = [
+            .text(indent: 0, "if (isRetry) f"), // `{` read as `f`
+            .text(indent: 2, "return password"),
+            .text(indent: 0, "8"), // lone `}` read as `8`
+        ]
+        #expect(Recognizer.render(slots) == "if (isRetry) {\n  return password\n}")
+        // A lone `)` closing a multi-line call is left alone.
+        #expect(Recognizer.render([.text(indent: 0, "call("), .text(indent: 2, "x"), .text(indent: 0, ")")]) == "call(\n  x\n)")
+    }
+
     @Test func renderLeavesPythonAlone() {
         let slots: [Slot] = [.text(indent: 0, "if x == 1:"), .text(indent: 4, "y = 1")]
         #expect(Recognizer.render(slots) == "if x == 1:\n    y = 1")
@@ -81,6 +101,39 @@ struct RecognizerTests {
         let (code, gutterEnd) = Recognizer.removingLineNumbers(rows)
         #expect(code.map { $0.map(\.text) } == [["def f(x):"], ["if x:"], ["return 1"], ["return 0"]])
         #expect(abs(gutterEnd - 0.05) < 0.0001)
+    }
+
+    /// Regression from the dev set: Vision read only 3 of 11 line numbers, and the gutter was kept.
+    @Test func removesGutterWhenMostNumbersAreUnread() {
+        let rows: [[TextBox]] = (0..<11).map { line in
+            let code = box("code \(line)", row: line, x: 0.12 + (line % 3 == 1 ? 0.04 : 0), width: 0.3)
+            return [1, 10, 11].contains(line + 1) ? [box("\(line + 1)", row: line, x: line + 1 >= 10 ? 0.02 : 0.04, width: line + 1 >= 10 ? 0.04 : 0.02), code] : [code]
+        }
+        let (code, gutterEnd) = Recognizer.removingLineNumbers(rows)
+        #expect(code.allSatisfy { $0.count == 1 && $0[0].text.hasPrefix("code") })
+        #expect(abs(gutterEnd - 0.06) < 0.0001)
+    }
+
+    /// Regression from blurry 1080p frames: one row's number was misread and merged with its code, and that single row
+    /// used to veto removing the whole gutter.
+    @Test func removesGutterDespiteAMergedMisreadNumber() {
+        var rows: [[TextBox]] = (0..<10).map { line in
+            [box("\(line + 1)", row: line, x: line + 1 >= 10 ? 0.02 : 0.04, width: line + 1 >= 10 ? 0.04 : 0.02),
+             box("code \(line)", row: line, x: 0.12, width: 0.3)]
+        }
+        rows[3] = [box("4O  code 3", row: 3, x: 0.04, width: 0.38)] // "4" misread as "4O" and merged
+        let (code, gutterEnd) = Recognizer.removingLineNumbers(rows)
+        #expect(gutterEnd > 0)
+        #expect(code.map { $0.map(\.text) } == (0..<10).map { ["code \($0)"] })
+    }
+
+    @Test func keepsNumbersThatStartAtTheCodeMargin() {
+        let rows: [[TextBox]] = [
+            [box("1", row: 0, x: 0.10, width: 0.02), box("+ offset", row: 0, x: 0.14, width: 0.2)],
+            [box("2", row: 1, x: 0.10, width: 0.02), box("* scale", row: 1, x: 0.14, width: 0.2)],
+            [box("total()", row: 2, x: 0.10, width: 0.2)], // code starts where the numbers are
+        ]
+        #expect(Recognizer.removingLineNumbers(rows).gutterEnd == 0)
     }
 
     @Test func keepsCodeThatMerelyStartsWithNumbers() {
