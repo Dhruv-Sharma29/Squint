@@ -12,6 +12,10 @@ struct MenuContent: View {
             .disabled(model.isBusy)
         Button("Read Clipboard Image", systemImage: "doc.on.clipboard", action: readClipboard)
             .disabled(model.isBusy)
+        if TableReader.isAvailable {
+            Button("Capture Table", systemImage: "tablecells") { Task { await model.captureTable() } }
+                .disabled(model.isBusy)
+        }
         if let scrolled = model.scrollCapture {
             let lines = scrolled.isEmpty ? 0 : scrolled.split(separator: "\n", omittingEmptySubsequences: false).count
             Button("Finish Scroll Capture (\(lines) lines)", systemImage: "stop.circle", action: model.finishScrollCapture)

@@ -15,6 +15,7 @@ struct LinkCommandTests {
         #expect(try command("SQUINT://Clipboard?mode=PLAIN") == .clipboard(code: false))
         #expect(try command("squint://clipboard?mode=other") == .clipboard(code: nil))
         #expect(try command("squint://settings") == .settings)
+        #expect(try command("squint://table") == .table)
     }
 
     @Test func rejectsUnknownLinks() throws {

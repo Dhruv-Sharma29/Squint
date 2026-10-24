@@ -19,6 +19,7 @@ struct PreferencesTests {
         #expect(preferences.showMenuBarIcon)
         #expect(!preferences.openFirstLink)
         #expect(!preferences.copyAsMarkdown)
+        #expect(preferences.tableFormat == .markdown)
         #expect(preferences.customWords.isEmpty)
     }
 
@@ -35,6 +36,7 @@ struct PreferencesTests {
         first.showMenuBarIcon = false
         first.openFirstLink = true
         first.copyAsMarkdown = true
+        first.tableFormat = .tsv
         first.customWords = ["Kubernetes", "Flaxmere"]
 
         let relaunched = Preferences(defaults: defaults)
@@ -45,6 +47,7 @@ struct PreferencesTests {
         #expect(!relaunched.showMenuBarIcon)
         #expect(relaunched.openFirstLink)
         #expect(relaunched.copyAsMarkdown)
+        #expect(relaunched.tableFormat == .tsv)
         #expect(relaunched.customWords == ["Kubernetes", "Flaxmere"])
 
         relaunched.language = nil

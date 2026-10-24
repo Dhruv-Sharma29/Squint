@@ -80,6 +80,18 @@ struct SettingsView: View {
                 }
             }
 
+            if TableReader.isAvailable {
+                Section("Tables") {
+                    Picker(selection: $preferences.tableFormat) {
+                        Text("Markdown").tag(TableReader.Format.markdown)
+                        Text("Tab-separated").tag(TableReader.Format.tsv)
+                    } label: {
+                        SettingsLabel(title: "Copy tables as", detail: "Tab-separated pastes into a spreadsheet",
+                                      systemName: "tablecells", color: .mint)
+                    }
+                }
+            }
+
             Section("Plain Mode") {
                 Picker(selection: $preferences.language) {
                     Text("Automatic").tag(String?.none)

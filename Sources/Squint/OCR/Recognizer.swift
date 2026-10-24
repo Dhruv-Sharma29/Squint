@@ -222,7 +222,7 @@ enum Recognizer {
                 } else if let opener = open.popLast(), let closer = pairs[opener.bracket] {
                     // The closer for the innermost open bracket, lined up with the line that opened it. Measured ink
                     // tends to sit too far right, and a misread opener can leave the wrong one open: the smaller wins.
-                    let column = language == .unknown ? indent : min(opener.indent, indent)
+                    let column = language == .braces ? min(opener.indent, indent) : indent
                     lines.append(String(repeating: " ", count: column) + String(closer) + opener.then)
                 } else if language == .braces, indent < leftmostText {
                     // Nothing open explains it, but it's left of all the text: the end of a block that opened before
@@ -258,9 +258,10 @@ enum Recognizer {
                 }
                 text = repairingCodeMisreads(repairingSquareBrackets(text))
                 if !inDocstring { text = CodeRepairs.repairing(text, language: language) }
-                // A line that starts by closing the innermost bracket lines up with the line that opened it, and a lone
-                // `}` gets the closers that close with it (`})`).
-                if let first = text.first, let top = open.last, pairs[top.bracket] == first, language != .unknown {
+                // In brace code, a line that starts with the `}` for the innermost `{` lines up with the line that opened it
+                // (Vision's indent for a lone `}` is often off), and a lone `}` gets the closers that close with it (`})`).
+                // Not Python's `)` or `]`: hanging indents put them elsewhere, and Vision reads them in place.
+                if text.first == "}", let top = open.last, top.bracket == "{", language == .braces {
                     indent = top.indent
                     if text == "}" { text += top.then }
                 }

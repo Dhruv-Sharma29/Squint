@@ -68,6 +68,10 @@ The same actions are in the **Shortcuts** app under Squint, and each one **retur
 
 If the actions still don't show up, open Squint once and wait a moment while macOS indexes it. Type `squint`, not `squint://`: with the slashes, Spotlight treats it as a web address.
 
+## Tables
+
+On macOS 26 or later, **Capture Table** in the menu (or `squint://table`) reads a table, with or without ruled lines, and copies it as Markdown, or as tab-separated values that paste straight into Numbers or Excel (Settings › Tables). If the selection holds several tables, the largest is copied.
+
 ## Scroll capture
 
 For code longer than the screen, such as a long file in a tutorial video:
@@ -97,6 +101,7 @@ Squint handles `squint://` links, so any launcher, automation tool or hotkey app
 | `squint://capture?mode=code` | Same, forcing Code Mode |
 | `squint://capture?mode=plain` | Same, forcing Plain Mode |
 | `squint://clipboard` | Read the image on the clipboard (accepts the same `mode` options) |
+| `squint://table` | Capture a table (macOS 26 or later) |
 | `squint://settings` | Open Settings |
 
 **From Terminal:**

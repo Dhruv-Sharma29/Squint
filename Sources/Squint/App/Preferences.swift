@@ -27,6 +27,11 @@ final class Preferences {
         didSet { defaults.set(copyAsMarkdown, forKey: "copyAsMarkdown") }
     }
 
+    /// How Capture Table copies a table.
+    var tableFormat: TableReader.Format {
+        didSet { defaults.set(tableFormat.rawValue, forKey: "tableFormat") }
+    }
+
     /// Opens the first web address in the copied text.
     var openFirstLink: Bool {
         didSet { defaults.set(openFirstLink, forKey: "openFirstLink") }
@@ -69,6 +74,7 @@ final class Preferences {
         showMenuBarIcon = defaults.object(forKey: "showMenuBarIcon") as? Bool ?? true
         openFirstLink = defaults.bool(forKey: "openFirstLink")
         copyAsMarkdown = defaults.bool(forKey: "copyAsMarkdown")
+        tableFormat = defaults.string(forKey: "tableFormat").flatMap(TableReader.Format.init) ?? .markdown
         customWords = defaults.stringArray(forKey: "customWords") ?? []
         launchAtLogin = LaunchAtLogin.isEnabled
     }

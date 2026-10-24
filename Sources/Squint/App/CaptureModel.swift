@@ -122,6 +122,39 @@ final class CaptureModel {
         }
     }
 
+    /// Select a screen region and copy the table in it, as Markdown or tab-separated values.
+    @discardableResult
+    func captureTable() async -> String? {
+        guard TableReader.isAvailable else {
+            fail(String(localized: "Tables need macOS 26 or later"))
+            return nil
+        }
+        guard begin() else { return nil }
+        defer { isBusy = false }
+        guard screenAccess() else {
+            status = .needsPermission
+            return nil
+        }
+        do {
+            guard let shot = try await captureRegion() else {
+                status = .idle
+                return nil
+            }
+            let rows = try await Self.readTable(shot)
+            guard let rows, !rows.isEmpty else {
+                fail(String(localized: "No table found. Select the whole table."))
+                return nil
+            }
+            let text = TableReader.formatted(rows, as: preferences.tableFormat)
+            copy(text)
+            announce(String(localized: "Copied a table with \(rows.count) rows"))
+            return text
+        } catch {
+            fail(error.localizedDescription)
+            return nil
+        }
+    }
+
     /// Starts a scroll capture: capture, scroll, capture again, and the parts are joined without repeating lines.
     func startScrollCapture() {
         scrollCapture = ""
@@ -137,6 +170,7 @@ final class CaptureModel {
         switch LinkCommand(url) {
         case .capture(let code): await capture(code: code)
         case .clipboard(let code): await readClipboard(code: code)
+        case .table: await captureTable()
         case .settings: break // windows belong to AppDelegate, which handles this link before it gets here
         case nil: fail(String(localized: "Unknown link: \(url.absoluteString)"))
         }
@@ -165,25 +199,30 @@ final class CaptureModel {
             let whole = scrollCapture.map { ScrollMerge.merging($0, read) } ?? read
             if scrollCapture != nil { scrollCapture = whole }
             let text = code && preferences.copyAsMarkdown ? MarkdownFence.wrapping(whole) : whole
-            pasteboard.clearContents()
-            pasteboard.setString(text, forType: .string)
-            status = .copied
+            copy(text)
             let lines = text.split(separator: "\n", omittingEmptySubsequences: false).count
             announce(String(localized: "Copied \(lines) lines"))
-            if preferences.playSound {
-                NSSound(named: "Tink")?.play()
-            }
             if preferences.openFirstLink, let link = Self.firstLink(in: text) {
                 openLink(link)
-            }
-            Task {
-                try? await Task.sleep(for: .seconds(1.5))
-                if status == .copied { status = .idle }
             }
             return text
         } catch {
             fail(error.localizedDescription)
             return nil
+        }
+    }
+
+    /// Puts `text` on the clipboard, with the sound and the menu bar tick that confirm it.
+    private func copy(_ text: String) {
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+        status = .copied
+        if preferences.playSound {
+            NSSound(named: "Tink")?.play()
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            if status == .copied { status = .idle }
         }
     }
 
@@ -215,6 +254,12 @@ final class CaptureModel {
     private nonisolated static func read(_ url: URL, code: Bool, language: String?, words: [String]) async throws -> String {
         defer { try? FileManager.default.removeItem(at: url) }
         return Recognizer.applyingCustomWords(try await Recognizer.text(at: url, code: code, language: language), words: words)
+    }
+
+    /// The table in the image, then the image deleted: it may hold private data.
+    private nonisolated static func readTable(_ url: URL) async throws -> [[String]]? {
+        defer { try? FileManager.default.removeItem(at: url) }
+        return try await TableReader.table(at: url)
     }
 
     /// The first web address in `text`: http and https only, so a captured `file:` or app link never opens anything.
