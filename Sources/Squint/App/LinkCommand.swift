@@ -1,10 +1,11 @@
 import Foundation
 
-/// A `squint://` link: `squint://capture` or `squint://clipboard`, with an optional `?mode=code` or `?mode=plain`.
-/// `code` is nil when the link doesn't choose a mode, so the Code Mode setting applies.
+/// A `squint://` link: `squint://capture` or `squint://clipboard`, with an optional `?mode=code` or `?mode=plain`, or
+/// `squint://settings`. `code` is nil when the link doesn't choose a mode, so the Code Mode setting applies.
 enum LinkCommand: Equatable {
     case capture(code: Bool?)
     case clipboard(code: Bool?)
+    case settings
 
     init?(_ url: URL) {
         guard url.scheme?.lowercased() == "squint" else { return nil }
@@ -18,6 +19,7 @@ enum LinkCommand: Equatable {
         switch url.host()?.lowercased() {
         case "capture": self = .capture(code: code)
         case "clipboard": self = .clipboard(code: code)
+        case "settings": self = .settings
         default: return nil
         }
     }

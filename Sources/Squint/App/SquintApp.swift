@@ -6,7 +6,7 @@ struct SquintApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            MenuContent(model: appDelegate.model)
+            MenuContent(model: appDelegate.model, showSettings: appDelegate.showSettings)
         } label: {
             if let symbol = appDelegate.model.statusSymbol {
                 Image(systemName: symbol)
@@ -15,10 +15,5 @@ struct SquintApp: App {
                 Image(nsImage: MenuBarIcon.image)
             }
         }
-
-        Settings {
-            SettingsView(model: appDelegate.model)
-        }
-        .windowResizability(.contentSize) // the window fits its content instead of stretching wide
     }
 }

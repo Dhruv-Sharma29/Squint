@@ -29,6 +29,7 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 
 ### Fixed
 
+- Settings opened behind other apps. Squint now opens its own Settings window in front, with keyboard focus; Esc or ⌘W closes it. `squint://settings` opens it too.
 - Long messages, such as the Screen Recording one, stretched the menu across the screen. Missing permission now shows a short message and an **Open Screen Recording Settings…** button.
 - A missing image file is reported as missing, not as being in the wrong format.
 - **Read Clipboard Image** read the *icon* of an image file copied in Finder instead of the image.

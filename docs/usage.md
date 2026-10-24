@@ -82,6 +82,7 @@ Squint handles `squint://` links, so any launcher, automation tool or hotkey app
 | `squint://capture?mode=code` | Same, forcing Code Mode |
 | `squint://capture?mode=plain` | Same, forcing Plain Mode |
 | `squint://clipboard` | Read the image on the clipboard (accepts the same `mode` options) |
+| `squint://settings` | Open Settings |
 
 **From Terminal:**
 

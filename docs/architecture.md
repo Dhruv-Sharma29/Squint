@@ -50,7 +50,8 @@ Folders are organised by feature, with one type per file.
 | `App/Preferences.swift` | Settings saved to `UserDefaults` |
 | `App/Shortcut.swift` | A global shortcut: Carbon key code and modifiers, display name, menu key equivalent |
 | `App/ShortcutRecorder.swift` | Records a new shortcut in Settings |
-| `App/SettingsView.swift` | The Settings window |
+| `App/SettingsView.swift` | The Settings window's content |
+| `App/SettingsPanel.swift` | The Settings window itself, opened in front by Squint (SwiftUI's `Settings` scene opened behind other apps) |
 | `App/LaunchAtLogin.swift` | Open at login through `SMAppService` |
 | `App/LinkCommand.swift` | Parses `squint://` links |
 | `App/MenuContent.swift` | Menu items |

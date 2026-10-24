@@ -119,6 +119,7 @@ final class CaptureModel {
         switch LinkCommand(url) {
         case .capture(let code): await capture(code: code)
         case .clipboard(let code): await readClipboard(code: code)
+        case .settings: break // windows belong to AppDelegate, which handles this link before it gets here
         case nil: fail(String(localized: "Unknown link: \(url.absoluteString)"))
         }
     }

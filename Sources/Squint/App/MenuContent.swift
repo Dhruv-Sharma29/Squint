@@ -2,7 +2,7 @@ import SwiftUI
 
 struct MenuContent: View {
     var model: CaptureModel
-    @Environment(\.openSettings) private var openSettings
+    var showSettings: () -> Void
 
     var body: some View {
         @Bindable var preferences = model.preferences
@@ -56,9 +56,4 @@ struct MenuContent: View {
         Task { await model.readClipboard() }
     }
 
-    /// A menu bar app isn't frontmost, so bring it forward or the window opens behind others.
-    private func showSettings() {
-        NSApplication.shared.activate()
-        openSettings()
-    }
 }

@@ -6,6 +6,7 @@ import AppKit
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = CaptureModel()
+    private lazy var settings = SettingsPanel(model: model)
 
     override init() {
         super.init()
@@ -15,7 +16,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
-            Task { await model.open(url) }
+            if LinkCommand(url) == .settings {
+                showSettings()
+            } else {
+                Task { await model.open(url) }
+            }
         }
+    }
+
+    func showSettings() {
+        settings.present()
     }
 }
