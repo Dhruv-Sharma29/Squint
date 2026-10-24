@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Squint: copy code from any screen on your Mac</title>
+<meta name="description" content="Squint is on-device screen OCR for programmers on macOS. Indentation, blank lines and closing brackets survive the trip to your clipboard. Free and open source.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="Squint: copy code from any screen on your Mac">
+<meta property="og:description" content="On-device screen OCR for programmers. Indentation, blank lines and closing brackets survive the trip to your clipboard.">
+<meta property="og:image" content="https://dhruv-sharma29.github.io/Squint/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="fonts/MartianMono-normal-400-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/AtkinsonHyperlegible-normal-400.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Atkinson Hyperlegible"; font-style: normal; font-weight: 400; font-display: swap; src: url(fonts/AtkinsonHyperlegible-normal-400.woff2) format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible"; font-style: normal; font-weight: 700; font-display: swap; src: url(fonts/AtkinsonHyperlegible-normal-700.woff2) format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible"; font-style: italic; font-weight: 400; font-display: swap; src: url(fonts/AtkinsonHyperlegible-italic-400.woff2) format("woff2"); }
+@font-face { font-family: "Martian Mono"; font-style: normal; font-weight: 400 800; font-stretch: 75% 112.5%; font-display: swap; src: url(fonts/MartianMono-normal-400-800.woff2) format("woff2"); }
+
+:root {
+  --glass: #EEF1F6;      /* page: the colour of a screen in daylight */
+  --surface: #FFFFFF;
+  --ink: #0E1530;        /* the icon's navy */
+  --ink-soft: #46506E;
+  --line: #D5DBE7;
+  --finder: #4D6BF0;     /* the icon's viewfinder brackets */
+  --link: #3048C4;
+  --screen: #0E1530;
+  --screen-text: #E4E8F3;
+  --screen-dim: #8790AE;
+  --right: #16794A;
+  --right-bg: #E3F3EA;
+  --wrong: #C2362F;
+  --wrong-bg: #FBE6E4;
+  --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --mono: "Martian Mono", ui-monospace, Menlo, monospace;
+  --measure: 66ch;
+  --gutter: clamp(1rem, 4vw, 3rem);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --glass: #111833; --surface: #18213F; --ink: #E7EBF6; --ink-soft: #A9B1CB; --line: #2A3558;
+    --finder: #7D95FF; --link: #9DB0FF; --screen: #0A0F24; --screen-text: #E4E8F3; --screen-dim: #8790AE;
+    --right: #5FD39B; --right-bg: #143A2A; --wrong: #FF8A80; --wrong-bg: #4A1E22;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--glass); color: var(--ink);
+  font: 400 1.125rem/1.55 var(--body);
+  text-rendering: optimizeLegibility;
+}
+a { color: var(--link); text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 3px solid var(--finder); outline-offset: 3px; border-radius: 4px; }
+code, pre, kbd { font-family: var(--mono); font-stretch: 87.5%; }
+h1, h2, h3 { font-family: var(--mono); color: var(--ink); margin: 0; }
+p { margin: 0 0 1em; max-width: var(--measure); }
+.wrap { max-width: 72rem; margin: 0 auto; padding: 0 var(--gutter); }
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 1rem; top: 1rem; background: var(--surface); padding: 0.5rem 1rem; z-index: 10; }
+
+/* Header */
+.bar { padding: 1.25rem 0; }
+.bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 0.6rem; font: 700 1.15rem/1 var(--mono); font-stretch: 112.5%; color: var(--ink); text-decoration: none; }
+.brand img { width: 2.25rem; height: 2.25rem; }
+.bar nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.bar nav a { color: var(--ink-soft); text-decoration: none; font-size: 1rem; }
+.bar nav a:hover { color: var(--ink); text-decoration: underline; }
+
+/* Hero */
+.hero { padding-block: clamp(2rem, 6vw, 4.5rem) 2.5rem; } /* block only: .wrap owns the side padding */
+.hero h1 {
+  font-size: clamp(2.1rem, 5.6vw, 4.1rem); font-weight: 650; font-stretch: 112.5%;
+  line-height: 1.08; letter-spacing: -0.03em; max-width: 17ch; text-wrap: balance;
+}
+.lede { font-size: clamp(1.15rem, 1.8vw, 1.3rem); color: var(--ink-soft); margin: 1.4rem 0 2rem; max-width: 52ch; }
+.install { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0.75rem; }
+.command {
+  display: flex; align-items: center; gap: 1rem; background: var(--screen); color: var(--screen-text);
+  border-radius: 10px; padding: 0.85rem 0.85rem 0.85rem 1.1rem; max-width: 100%;
+}
+.command pre { margin: 0; font-size: 0.9rem; line-height: 1.6; overflow-x: auto; }
+.command pre .dim { color: var(--screen-dim); }
+.copy {
+  flex: none; font: 700 0.95rem/1 var(--body); color: var(--screen); background: var(--screen-text);
+  border: 0; border-radius: 7px; padding: 0.7rem 1rem; cursor: pointer;
+}
+.copy:hover { background: #fff; }
+.secondary {
+  display: inline-flex; align-items: center; padding: 0.85rem 1.2rem; border-radius: 10px;
+  border: 1.5px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 700;
+}
+.secondary:hover { border-color: var(--ink); }
+.fine { color: var(--ink-soft); font-size: 0.95rem; margin-top: 1rem; }
+
+/* Demo */
+.demo { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: clamp(1.25rem, 3vw, 2.5rem); align-items: start; padding-bottom: 1rem; }
+.player { margin: 0; background: var(--screen); border-radius: 14px; overflow: hidden; color: var(--screen-text); }
+.player-title { font-size: 0.85rem; color: var(--screen-dim); padding: 0.75rem 1.1rem; border-bottom: 1px solid #1E2848; }
+.viewport { position: relative; margin: clamp(1.4rem, 3vw, 2.2rem); }
+.viewport pre { margin: 0; font-size: clamp(0.72rem, 1.15vw, 0.86rem); line-height: 1.75; color: #D9DEEB; filter: blur(0.35px); overflow-x: auto; }
+.viewport .k { color: #B6A0FF; } .viewport .p { color: #8FD3FF; }
+.corner { position: absolute; width: 1.6rem; height: 1.6rem; border: 3px solid var(--finder); }
+.corner.tl { top: -0.9rem; left: -0.9rem; border-right: 0; border-bottom: 0; border-top-left-radius: 6px; }
+.corner.tr { top: -0.9rem; right: -0.9rem; border-left: 0; border-bottom: 0; border-top-right-radius: 6px; }
+.corner.bl { bottom: -0.9rem; left: -0.9rem; border-right: 0; border-top: 0; border-bottom-left-radius: 6px; }
+.corner.br { bottom: -0.9rem; right: -0.9rem; border-left: 0; border-top: 0; border-bottom-right-radius: 6px; }
+.scrub { display: flex; align-items: center; gap: 0.8rem; padding: 0 1.1rem 1rem; font-size: 0.8rem; color: var(--screen-dim); }
+.scrub i { flex: 1; height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--finder) 41%, #2A3558 41%); }
+
+.result { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1.1rem; }
+.result h2 { font-size: 1rem; font-stretch: 100%; margin-bottom: 0.9rem; }
+.switch { display: inline-flex; background: var(--glass); border-radius: 9px; padding: 3px; margin-bottom: 1rem; }
+.switch button {
+  font: 700 0.95rem/1 var(--body); color: var(--ink-soft); background: transparent; border: 0;
+  padding: 0.6rem 1rem; border-radius: 7px; cursor: pointer;
+}
+.switch button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+.output { list-style: none; margin: 0; padding: 0; font-family: var(--mono); font-stretch: 87.5%; font-size: 0.78rem; line-height: 1.5; }
+.output li { display: flex; gap: 0.6rem; padding: 0.15rem 0.5rem; border-radius: 5px; white-space: pre; overflow-x: auto; }
+.output li + li { margin-top: 3px; }
+.output .ok { background: var(--right-bg); }
+.output .bad { background: var(--wrong-bg); }
+.output .mark { flex: none; width: 1ch; font-weight: 800; }
+.output .ok .mark { color: var(--right); } .output .bad .mark { color: var(--wrong); }
+.output .ind { color: var(--ink-soft); opacity: 0.55; }
+.output mark { background: none; color: var(--wrong); font-weight: 800; text-decoration: underline wavy; text-underline-offset: 3px; }
+.output .gone { font-family: var(--body); font-size: 0.9rem; color: var(--wrong); }
+.score { margin: 0.9rem 0 0; font-weight: 700; }
+.score.good { color: var(--right); } .score.poor { color: var(--wrong); }
+.source { font-size: 0.9rem; color: var(--ink-soft); margin-top: 0.6rem; }
+
+/* Sections */
+section.block { padding: clamp(3.5rem, 8vw, 6rem) 0 0; }
+.block h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 650; font-stretch: 100%; letter-spacing: -0.02em; line-height: 1.2; max-width: 26ch; margin-bottom: 1rem; }
+.block > .wrap > p { color: var(--ink-soft); }
+
+.fixes { width: 100%; border-collapse: collapse; margin-top: 2rem; font-size: 1rem; }
+.fixes th { text-align: left; font-weight: 700; color: var(--ink-soft); padding: 0 1rem 0.6rem 0; border-bottom: 1.5px solid var(--ink); }
+.fixes td { padding: 1rem 1rem 1rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.fixes td:first-child { width: 34%; font-weight: 700; }
+.fixes code { font-size: 0.82rem; white-space: pre; padding: 0.2rem 0.45rem; border-radius: 5px; display: inline-block; }
+.fixes .was code { background: var(--wrong-bg); color: var(--ink); }
+.fixes .now code { background: var(--right-bg); color: var(--ink); }
+.fixes .was mark { background: none; color: var(--wrong); font-weight: 800; }
+.fixes .empty { color: var(--wrong); font-style: italic; }
+
+.bench { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 4rem); margin-top: 2rem; align-items: start; }
+.bars { margin: 0; }
+.bars figcaption { font-weight: 700; margin-bottom: 1.1rem; }
+.bar-row { display: grid; grid-template-columns: 12rem 1fr; align-items: center; gap: 0.75rem; margin-bottom: 0.85rem; }
+.bar-row span { font-size: 0.98rem; }
+.bar-row b { display: block; height: 2.1rem; border-radius: 6px; background: var(--line); position: relative; }
+.bar-row b i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink-soft); }
+.bar-row.us b i { background: var(--finder); }
+.bar-row b em { position: absolute; top: 50%; transform: translateY(-50%); font: 700 0.85rem/1 var(--mono); font-style: normal; color: var(--ink); }
+.facts { margin: 0; display: grid; gap: 1.4rem; }
+.facts div { border-left: 3px solid var(--finder); padding-left: 1rem; }
+.facts dt { font: 650 1.5rem/1.1 var(--mono); font-stretch: 100%; }
+.facts dd { margin: 0.3rem 0 0; color: var(--ink-soft); }
+.caveat { margin-top: 2rem; padding: 1.1rem 1.25rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; max-width: none; }
+
+.uses { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 2rem 3rem; margin: 2rem 0 0; }
+.uses dt { font-weight: 700; }
+.uses dd { margin: 0.35rem 0 0; color: var(--ink-soft); }
+kbd { font-size: 0.85em; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0.05rem 0.35rem; background: var(--surface); }
+
+.private { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.5rem 3rem; margin: 2rem 0 0; padding: 0; list-style: none; }
+.private li { color: var(--ink-soft); }
+.private strong { display: block; color: var(--ink); }
+
+.steps { counter-reset: step; list-style: none; margin: 2rem 0 0; padding: 0; display: grid; gap: 1.75rem; max-width: 46rem; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 2.6rem 1fr; gap: 1rem; }
+.steps li::before {
+  content: counter(step); font: 700 1rem/2.4rem var(--mono); text-align: center; width: 2.4rem; height: 2.4rem;
+  border: 2px solid var(--finder); border-radius: 50%; color: var(--ink);
+}
+.steps h3 { font: 700 1.1rem/1.4 var(--body); margin: 0.4rem 0 0.4rem; }
+.steps p { color: var(--ink-soft); margin: 0; }
+.steps .command { margin-top: 0.7rem; }
+
+footer { margin-top: clamp(4rem, 9vw, 7rem); padding: 2rem 0 3rem; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 0.95rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem 2rem; }
+footer nav { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+footer p { margin: 0; }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 860px) {
+  .demo, .bench { grid-template-columns: 1fr; }
+  .bar-row { grid-template-columns: 1fr; gap: 0.35rem; }
+  .fixes, .fixes tbody, .fixes tr, .fixes td { display: block; width: 100% !important; }
+  .fixes thead { display: none; }
+  .fixes tr { padding: 1rem 0; border-bottom: 1px solid var(--line); }
+  .fixes td { border: 0; padding: 0.2rem 0; }
+  .fixes td.was::before { content: "Plain OCR: "; color: var(--ink-soft); font-size: 0.9rem; }
+  .fixes td.now::before { content: "Squint: "; color: var(--ink-soft); font-size: 0.9rem; }
+}
+
+/* The one moment: the headline and the frame come into focus as the viewfinder closes in. */
+@media (prefers-reduced-motion: no-preference) {
+  .js .hero h1, .js .viewport pre { filter: blur(7px); transition: filter 1.1s cubic-bezier(.2, .7, .2, 1); }
+  .js .corner { transition: transform 1.1s cubic-bezier(.2, .7, .2, 1), opacity 0.6s; opacity: 0; }
+  .js .corner.tl { transform: translate(-1.6rem, -1.6rem); } .js .corner.tr { transform: translate(1.6rem, -1.6rem); }
+  .js .corner.bl { transform: translate(-1.6rem, 1.6rem); } .js .corner.br { transform: translate(1.6rem, 1.6rem); }
+  .js.focused .hero h1 { filter: blur(0); }
+  .js.focused .viewport pre { filter: blur(0.35px); }
+  .js.focused .corner { transform: none; opacity: 1; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="icon.png" alt="" width="36" height="36">Squint</a>
+    <nav aria-label="Sections">
+      <a href="#fixes">What it fixes</a>
+      <a href="#measured">Benchmark</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/Dhruv-Sharma29/Squint">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap hero">
+    <h1>Copy code from any screen, shape intact.</h1>
+    <p class="lede">Squint is screen OCR for programmers on macOS. Indentation, blank lines and closing brackets make it to your clipboard. Editor line numbers don't. It runs on your Mac in about a tenth of a second, and it's free.</p>
+    <div class="install">
+      <div class="command">
+        <pre id="brew"><span class="dim">$</span> brew tap dhruv-sharma29/squint https://github.com/Dhruv-Sharma29/Squint
+<span class="dim">$</span> brew install dhruv-sharma29/squint/squint</pre>
+        <button class="copy" type="button" data-copy="brew-text">Copy</button>
+      </div>
+      <a class="secondary" href="https://github.com/Dhruv-Sharma29/Squint">View the source</a>
+    </div>
+    <p class="fine">For macOS 14 or later. MIT-licensed. <span role="status" aria-live="polite" id="copy-status"></span></p>
+  </div>
+
+  <div class="wrap demo" aria-label="Example capture">
+    <figure class="player">
+      <figcaption class="player-title">JavaScript Basics, lesson 4: grouping data (paused)</figcaption>
+      <div class="viewport">
+        <span class="corner tl" aria-hidden="true"></span><span class="corner tr" aria-hidden="true"></span>
+        <span class="corner bl" aria-hidden="true"></span><span class="corner br" aria-hidden="true"></span>
+<pre aria-label="Code in the paused video"><span class="k">function</span> groupBy(items, key) {
+  <span class="k">const</span> groups = {};
+  <span class="k">for</span> (<span class="k">const</span> item <span class="k">of</span> items) {
+    <span class="k">const</span> k = item[key];
+    <span class="k">if</span> (!groups[k]) {
+      groups[k] = [];
+    }
+    groups[k].push(item);
+  }
+
+  <span class="k">return</span> groups;
+}</pre>
+      </div>
+      <div class="scrub" aria-hidden="true"><span>▶</span><i></i><span>12:48 / 31:05</span></div>
+    </figure>
+
+    <div class="result">
+      <h2>What lands on your clipboard</h2>
+      <div class="switch" role="tablist" aria-label="Recognition">
+        <button type="button" role="tab" id="tab-squint" aria-controls="panel-squint" aria-selected="true">Squint</button>
+        <button type="button" role="tab" id="tab-plain" aria-controls="panel-plain" aria-selected="false" tabindex="-1">Plain OCR</button>
+      </div>
+      <div role="tabpanel" id="panel-squint" aria-labelledby="tab-squint">
+        <ol class="output" aria-label="Squint output, every line correct">
+          <li class="ok"><span class="mark">✓</span>function groupBy(items, key) {</li>
+          <li class="ok"><span class="mark">✓</span><span><span class="ind">··</span>const groups = {};</span></li>
+          <li class="ok"><span class="mark">✓</span><span><span class="ind">··</span>for (const item of items) {</span></li>
+          <li class="ok"><span class="mark">✓</span><span><span class="ind">····</span>const k = item[key];</span></li>
+          <li class="ok"><span class="mark">✓</span><span><span class="ind">····</span>if (!groups[k]) {</span></li>
+          <li class="ok"><span class="mark">✓</span><span><span class="ind">······</span>groups[k] = [];</span></li>
+          <li class="ok"><span class="mark">✓</span><span><span class="ind">····</span>}</span></li>
+          <li class="ok"><span class="mark">✓</span><span><span class="ind">····</span>groups[k].push(item);</span></li>
+          <li class="ok"><span class="mark">✓</span><span><span class="ind">··</span>}</span></li>
+          <li class="ok"><span class="mark">✓</span><span> </span></li>
+          <li class="ok"><span class="mark">✓</span><span><span class="ind">··</span>return groups;</span></li>
+          <li class="ok"><span class="mark">✓</span>}</li>
+        </ol>
+        <p class="score good">12 of 12 lines exactly right. 0% character errors.</p>
+      </div>
+      <div role="tabpanel" id="panel-plain" aria-labelledby="tab-plain">
+        <ol class="output" aria-label="Plain OCR output, no line correct">
+          <li class="bad"><span class="mark">✗</span><span>function groupBy<mark>␣</mark>(items, key) {</span></li>
+          <li class="bad"><span class="mark">✗</span>const groups = {};</li>
+          <li class="bad"><span class="mark">✗</span>for (const item of items) {</li>
+          <li class="bad"><span class="mark">✗</span><span>const k = item[key<mark>l</mark>;</span></li>
+          <li class="bad"><span class="mark">✗</span>if (!groups[k]) {</li>
+          <li class="bad"><span class="mark">✗</span>groups[k] = [];</li>
+          <li class="bad"><span class="mark">✗</span><span>groups[k<mark>l</mark>.push(item);</span></li>
+          <li class="bad"><span class="mark">✗</span>return groups;</li>
+          <li class="bad"><span class="mark">✗</span><span class="gone">Missing: all indentation, three closing braces and the blank line</span></li>
+        </ol>
+        <p class="score poor">0 of 12 lines exactly right. 19.4% character errors.</p>
+      </div>
+      <p class="source">Real output for this frame. Plain OCR is Apple Vision with default settings, the engine behind the text recognition built into macOS.</p>
+    </div>
+  </div>
+
+  <section class="block" id="fixes" aria-labelledby="fixes-title">
+    <div class="wrap">
+      <h2 id="fixes-title">What goes wrong when you OCR code, and what Squint does about it</h2>
+      <p>General-purpose OCR is built for prose. Code breaks it in the same few ways, every time.</p>
+      <table class="fixes">
+        <thead><tr><th scope="col">Problem</th><th scope="col">Plain OCR</th><th scope="col">Squint</th></tr></thead>
+        <tbody>
+          <tr><td>Indentation is flattened, so Python becomes a different program</td><td class="was"><code>return password</code></td><td class="now"><code>    return password</code></td></tr>
+          <tr><td>A line holding only a closing brace vanishes</td><td class="was"><span class="empty">(line missing)</span></td><td class="now"><code>  }</code></td></tr>
+          <tr><td>Editor line numbers are glued to the code</td><td class="was"><code><mark>12</mark>   return groups;</code></td><td class="now"><code>  return groups;</code></td></tr>
+          <tr><td>A closing bracket is read as the letter l</td><td class="was"><code>item[key<mark>l</mark>;</code></td><td class="now"><code>item[key];</code></td></tr>
+          <tr><td>An opening brace is read as the letter f</td><td class="was"><code>if (isRetry) <mark>f</mark></code></td><td class="now"><code>if (isRetry) {</code></td></tr>
+          <tr><td>Autocorrect adds spaces code never had</td><td class="was"><code>groupBy<mark> </mark>(items)</code></td><td class="now"><code>groupBy(items)</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="block" id="measured" aria-labelledby="measured-title">
+    <div class="wrap">
+      <h2 id="measured-title">Measured on code it was never tuned on</h2>
+      <p>A public benchmark of functions from Python's standard library and npm, rendered in six editor themes and six fonts, with line numbers and paused-video blur. Every change is developed on one set and reported on another.</p>
+      <div class="bench">
+        <figure class="bars">
+          <figcaption>Character error rate on 40 test screenshots (lower is better)</figcaption>
+          <div class="bar-row us"><span>Squint</span><b><i style="width: 16%"></i><em style="left: calc(16% + 0.5rem)">3.2%</em></b></div>
+          <div class="bar-row"><span>Apple Vision, default</span><b><i style="width: 83.5%"></i><em style="left: calc(83.5% + 0.5rem)">16.7%</em></b></div>
+          <div class="bar-row"><span>Apple Live Text</span><b><i style="width: 94%"></i><em style="left: calc(94% - 3.6rem); color: #fff">18.8%</em></b></div>
+        </figure>
+        <dl class="facts">
+          <div><dt>2.4%</dt><dd>character errors on a fresh held-out set nothing was developed on</dd></div>
+          <div><dt>61%</dt><dd>of lines exactly right, against 2–4% for built-in OCR</dd></div>
+          <div><dt>0.13 s</dt><dd>from selection to clipboard, offline</dd></div>
+        </dl>
+      </div>
+      <p class="caveat"><strong>The honest part:</strong> most captures still need a small fix before they run, because one misread character is enough to stop code compiling. An AI chat assistant transcribed every benchmark image perfectly; Squint's advantage over it is speed, privacy and cost. The <a href="https://github.com/Dhruv-Sharma29/Squint/blob/main/docs/evaluation.md">full evaluation</a> has every number, including where Squint loses.</p>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="uses-title">
+    <div class="wrap">
+      <h2 id="uses-title">Fits the way you already work</h2>
+      <dl class="uses">
+        <div><dt>One shortcut</dt><dd>Press <kbd>⇧</kbd><kbd>⌘</kbd><kbd>2</kbd> and drag over code, or record any shortcut you like in Settings.</dd></div>
+        <div><dt>Line numbers stripped</dt><dd>Capture an editor with its gutter and get only the code, even when the numbers are too blurry to read.</dd></div>
+        <div><dt>Spotlight, Siri and Shortcuts</dt><dd>Type "Squint" in Spotlight to capture. In Shortcuts, every action returns the text for your next step. Needs a build signed with your Apple ID.</dd></div>
+        <div><dt>Screenshots you already have</dt><dd>Read an image from the clipboard, or an image file copied in Finder.</dd></div>
+        <div><dt>Prose too</dt><dd>Turn off Code Mode for paragraphs, with automatic language detection across up to 33 languages, including Hindi.</dd></div>
+        <div><dt>QR codes and a command line</dt><dd>Select a QR code to copy its link. Script it with <code>squint screenshot.png</code>.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="private-title">
+    <div class="wrap">
+      <h2 id="private-title">Your screen stays on your Mac</h2>
+      <ul class="private">
+        <li><strong>No network, at all.</strong> Recognition runs on Apple's on-device Vision. Squint produces identical output with every network connection blocked.</li>
+        <li><strong>Screenshots don't linger.</strong> Each capture is a temporary file, deleted as soon as it has been read.</li>
+        <li><strong>One permission.</strong> Screen Recording, so Squint can see the area you select. No account, no analytics.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block" id="install" aria-labelledby="install-title">
+    <div class="wrap">
+      <h2 id="install-title">Install in a minute</h2>
+      <ol class="steps">
+        <li><div><h3>Install with Homebrew</h3><p>Homebrew builds Squint on your Mac in about 20 seconds, so Gatekeeper never blocks it.</p>
+          <div class="command"><pre><span class="dim">$</span> brew tap dhruv-sharma29/squint https://github.com/Dhruv-Sharma29/Squint
+<span class="dim">$</span> brew install dhruv-sharma29/squint/squint</pre><button class="copy" type="button" data-copy="brew-text">Copy</button></div></div></li>
+        <li><div><h3>Start it, now and at every login</h3>
+          <div class="command"><pre><span class="dim">$</span> brew services start squint</pre><button class="copy" type="button" data-copy="services-text">Copy</button></div></div></li>
+        <li><div><h3>Allow Screen Recording</h3><p>On your first capture, macOS asks for permission. Allow Squint, then quit and reopen it.</p></div></li>
+        <li><div><h3>Capture</h3><p>Press <kbd>⇧</kbd><kbd>⌘</kbd><kbd>2</kbd>, drag over some code, and paste.</p></div></li>
+      </ol>
+      <p class="fine">Prefer to build it yourself? See the <a href="https://github.com/Dhruv-Sharma29/Squint/blob/main/docs/installation.md">installation guide</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Squint is free and open source under the MIT license. © 2026 Dhruv Sharma.</p>
+    <nav aria-label="Project">
+      <a href="https://github.com/Dhruv-Sharma29/Squint">Source</a>
+      <a href="https://github.com/Dhruv-Sharma29/Squint/blob/main/docs/usage.md">Docs</a>
+      <a href="https://github.com/Dhruv-Sharma29/Squint/blob/main/docs/roadmap.md">Roadmap</a>
+      <a href="https://github.com/Dhruv-Sharma29/Squint/blob/main/CHANGELOG.md">Changelog</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  root.classList.add("js");
+  // Come into focus once the fonts are ready, and never later than 1.5 s, so the page can't stay blurred
+  // (requestAnimationFrame is paused in background tabs, and font loading may never report done).
+  const focus = () => root.classList.add("focused");
+  setTimeout(focus, 1500);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(focus, 120));
+
+  // Tabs: Squint / Plain OCR.
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const select = (tab) => tabs.forEach((t) => {
+    const on = t === tab;
+    t.setAttribute("aria-selected", on);
+    t.tabIndex = on ? 0 : -1;
+    document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+  });
+  tabs.forEach((tab, i) => {
+    tab.addEventListener("click", () => select(tab));
+    tab.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      const next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+      select(next); next.focus();
+    });
+  });
+  select(tabs[0]);
+
+  // Copy buttons.
+  const texts = {
+    "brew-text": "brew tap dhruv-sharma29/squint https://github.com/Dhruv-Sharma29/Squint\nbrew install dhruv-sharma29/squint/squint",
+    "services-text": "brew services start squint",
+  };
+  const status = document.getElementById("copy-status");
+  document.querySelectorAll("[data-copy]").forEach((button) => button.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(texts[button.dataset.copy]);
+      button.textContent = "Copied";
+      status.textContent = "Copied to the clipboard.";
+    } catch {
+      button.textContent = "Select and copy";
+    }
+    setTimeout(() => { button.textContent = "Copy"; status.textContent = ""; }, 2000);
+  }));
+})();
+</script>
+</body>
+</html>
