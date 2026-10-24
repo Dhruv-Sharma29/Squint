@@ -195,6 +195,15 @@ struct RecognizerTests {
         #expect(!text.unicodeScalars.contains { $0.properties.isEmojiPresentation })
     }
 
+    @Test func customWordsFixOneLetterMisreads() {
+        let words = ["Flaxmere", "yaml", "UIKit", "go"]
+        #expect(Recognizer.applyingCustomWords("Open Flaxmers with flaxmere.yami", words: words) == "Open Flaxmere with flaxmere.yaml")
+        #expect(Recognizer.applyingCustomWords("import UlKit", words: words) == "import UIKit")
+        // One letter off is fixed; two letters off, and words under four letters, are left alone.
+        #expect(Recognizer.applyingCustomWords("Flaxmore Flexmors gg do", words: words) == "Flaxmere Flexmors gg do")
+        #expect(Recognizer.applyingCustomWords("Flaxmers", words: []) == "Flaxmers")
+    }
+
     @Test func reportsMissingAndUnreadableFilesDistinctly() async throws {
         let missing = URL.temporaryDirectory.appending(path: "squint-missing-\(UUID().uuidString).png")
         let missingError = await #expect(throws: CocoaError.self) { try await Recognizer.text(at: missing, code: true) }

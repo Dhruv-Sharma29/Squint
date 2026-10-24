@@ -24,6 +24,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// Opening Squint again (Finder, Spotlight) shows Settings: with the menu bar icon hidden, that's the way back to it.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        showSettings()
+        return false
+    }
+
     func showSettings() {
         settings.present()
     }

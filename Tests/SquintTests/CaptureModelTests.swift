@@ -25,10 +25,11 @@ struct CaptureModelTests {
 
     private struct OverlayOpened: Error {}
 
-    private func makeModel(screenAccess: Bool = true, capture: @escaping @MainActor () async throws -> URL?) throws -> CaptureModel {
+    private func makeModel(screenAccess: Bool = true, openLink: @escaping @MainActor (URL) -> Void = { _ in },
+                           capture: @escaping @MainActor () async throws -> URL?) throws -> CaptureModel {
         let defaults = try #require(UserDefaults(suiteName: suite))
         return CaptureModel(preferences: Preferences(defaults: defaults), pasteboard: pasteboard,
-                            screenAccess: { screenAccess }, captureRegion: capture, registersHotKey: false)
+                            screenAccess: { screenAccess }, captureRegion: capture, openLink: openLink, registersHotKey: false)
     }
 
     private func indents(_ text: String?) -> [Int]? {
@@ -48,6 +49,25 @@ struct CaptureModelTests {
         #expect(model.status == .copied)
         #expect(!model.isBusy)
         #expect(!FileManager.default.fileExists(atPath: screenshot.path(percentEncoded: false))) // private data deleted
+    }
+
+    @Test func opensTheFirstLinkOnlyWhenAsked() async throws {
+        defer { pasteboard.releaseGlobally() }
+        var opened: [URL] = []
+        let page = "// docs: https://example.com/guide\nlet x = 1"
+        let model = try makeModel(openLink: { opened.append($0) }) { try CodeImage.write(page) }
+
+        await model.capture()
+        #expect(opened.isEmpty) // off by default
+
+        model.preferences.openFirstLink = true
+        await model.capture()
+        #expect(opened == [URL(string: "https://example.com/guide")])
+    }
+
+    @Test func linksOtherThanWebAddressesNeverOpen() {
+        #expect(CaptureModel.firstLink(in: "see file:///etc/passwd or mailto:a@b.co") == nil)
+        #expect(CaptureModel.firstLink(in: "x file:///tmp then http://example.org/a") == URL(string: "http://example.org/a"))
     }
 
     @Test func cancelledCaptureLeavesClipboardAlone() async throws {

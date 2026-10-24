@@ -74,6 +74,21 @@ enum Recognizer {
         return render(slots(codeRows, ink: ink, scanFrom: gutterEnd, pitch: pitch))
     }
 
+    /// Spells words one letter away from a custom word the way the word list does (`Flaxmers` → `Flaxmere`). Vision's own
+    /// `customWords` made no difference in testing, with or without language correction. Only words of four or more
+    /// letters are corrected, and a word that already matches one on the list, ignoring case, is left alone.
+    static func applyingCustomWords(_ text: String, words: [String]) -> String {
+        let words = words.filter { $0.count >= 4 }
+        guard !words.isEmpty else { return text }
+        return text.replacing(/[\p{L}\p{N}_]{4,}/) { match in
+            let token = String(match.output)
+            guard !words.contains(where: { $0.caseInsensitiveCompare(token) == .orderedSame }),
+                  let word = words.first(where: { Metrics.distance($0.lowercased(), token.lowercased()) == 1 })
+            else { return token }
+            return word
+        }
+    }
+
     private static func textRequest(code: Bool, language: String?) -> VNRecognizeTextRequest {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate

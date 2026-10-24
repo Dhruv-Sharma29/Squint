@@ -16,6 +16,9 @@ struct PreferencesTests {
         #expect(preferences.shortcut == .standard)
         #expect(!preferences.playSound)
         #expect(preferences.language == nil)
+        #expect(preferences.showMenuBarIcon)
+        #expect(!preferences.openFirstLink)
+        #expect(preferences.customWords.isEmpty)
     }
 
     @Test func settingsPersistAcrossLaunches() throws {
@@ -28,12 +31,18 @@ struct PreferencesTests {
         first.shortcut = custom
         first.playSound = true
         first.language = "hi-IN"
+        first.showMenuBarIcon = false
+        first.openFirstLink = true
+        first.customWords = ["Kubernetes", "Flaxmere"]
 
         let relaunched = Preferences(defaults: defaults)
         #expect(!relaunched.codeMode)
         #expect(relaunched.shortcut == custom)
         #expect(relaunched.playSound)
         #expect(relaunched.language == "hi-IN")
+        #expect(!relaunched.showMenuBarIcon)
+        #expect(relaunched.openFirstLink)
+        #expect(relaunched.customWords == ["Kubernetes", "Flaxmere"])
 
         relaunched.language = nil
         #expect(Preferences(defaults: defaults).language == nil)

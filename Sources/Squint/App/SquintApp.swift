@@ -5,7 +5,8 @@ struct SquintApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
 
     var body: some Scene {
-        MenuBarExtra {
+        @Bindable var preferences = appDelegate.model.preferences
+        MenuBarExtra(isInserted: $preferences.showMenuBarIcon) {
             MenuContent(model: appDelegate.model, showSettings: appDelegate.showSettings)
         } label: {
             if let symbol = appDelegate.model.statusSymbol {

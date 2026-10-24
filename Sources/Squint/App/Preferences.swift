@@ -16,6 +16,22 @@ final class Preferences {
         didSet { defaults.set(playSound, forKey: "playSound") }
     }
 
+    /// Off hides the menu bar icon; Squint stays reachable through its shortcut, `squint://` links, and opening the app
+    /// again, which shows Settings.
+    var showMenuBarIcon: Bool {
+        didSet { defaults.set(showMenuBarIcon, forKey: "showMenuBarIcon") }
+    }
+
+    /// Opens the first web address in the copied text.
+    var openFirstLink: Bool {
+        didSet { defaults.set(openFirstLink, forKey: "openFirstLink") }
+    }
+
+    /// Names and terms the text should spell exactly; see `Recognizer.applyingCustomWords`.
+    var customWords: [String] {
+        didSet { defaults.set(customWords, forKey: "customWords") }
+    }
+
     /// Recognition language for Plain Mode, as a Vision language code; nil detects the language automatically.
     var language: String? {
         didSet { defaults.set(language, forKey: "language") }
@@ -45,6 +61,9 @@ final class Preferences {
         shortcut = defaults.data(forKey: "shortcut").flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .standard
         playSound = defaults.bool(forKey: "playSound")
         language = defaults.string(forKey: "language")
+        showMenuBarIcon = defaults.object(forKey: "showMenuBarIcon") as? Bool ?? true
+        openFirstLink = defaults.bool(forKey: "openFirstLink")
+        customWords = defaults.stringArray(forKey: "customWords") ?? []
         launchAtLogin = LaunchAtLogin.isEnabled
     }
 }

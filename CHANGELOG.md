@@ -6,6 +6,10 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 
 ### Added
 
+- **Custom words** in Settings: names and terms Squint spells exactly, correcting words one letter off (`Flaxmers` → `Flaxmere`). Vision's own custom-word option made no difference in testing, so Squint applies the list itself.
+- **Open links:** optionally opens the first web address in the copied text.
+- **Hide the menu bar icon:** opening Squint again shows Settings, to bring it back.
+
 - **Emoji.** Vision can't read emoji, and it could drop the text after one: `console.log("done ✅")` came back as `console.log("done`. Squint now recognizes emoji by comparing them with Apple Color Emoji, and reads the text around them in full. On 300 rendered test lines, 76% of emoji are found and none are wrong or invented; small emoji are found less often. See [Evaluation](docs/evaluation.md#emoji).
 
 ## [0.2.0] - 2026-10-24

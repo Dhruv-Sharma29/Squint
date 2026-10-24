@@ -30,17 +30,20 @@ final class CaptureModel {
     @ObservationIgnored private let pasteboard: NSPasteboard
     @ObservationIgnored private let screenAccess: @MainActor () -> Bool
     @ObservationIgnored private let captureRegion: @MainActor () async throws -> URL?
+    @ObservationIgnored private let openLink: @MainActor (URL) -> Void
 
     /// The defaults are the real system; tests pass a private pasteboard and a stand-in for the selection overlay.
     init(preferences: Preferences = Preferences(),
          pasteboard: NSPasteboard = .general,
          screenAccess: @escaping @MainActor () -> Bool = CaptureModel.requestScreenAccess,
          captureRegion: @escaping @MainActor () async throws -> URL? = { try await ScreenCapture.region() },
+         openLink: @escaping @MainActor (URL) -> Void = { NSWorkspace.shared.open($0) },
          registersHotKey: Bool = true) {
         self.preferences = preferences
         self.pasteboard = pasteboard
         self.screenAccess = screenAccess
         self.captureRegion = captureRegion
+        self.openLink = openLink
         if registersHotKey {
             hotKeyAvailable = registerHotKey(preferences.shortcut)
         }
@@ -139,7 +142,7 @@ final class CaptureModel {
 
     private func recognize(_ image: URL, code: Bool) async -> String? {
         do {
-            let text = try await Self.read(image, code: code, language: preferences.language)
+            let text = try await Self.read(image, code: code, language: preferences.language, words: preferences.customWords)
             guard !text.isEmpty else {
                 fail(String(localized: "No text found. Try a larger area."))
                 return nil
@@ -151,6 +154,9 @@ final class CaptureModel {
             announce(String(localized: "Copied \(lines) lines"))
             if preferences.playSound {
                 NSSound(named: "Tink")?.play()
+            }
+            if preferences.openFirstLink, let link = Self.firstLink(in: text) {
+                openLink(link)
             }
             Task {
                 try? await Task.sleep(for: .seconds(1.5))
@@ -188,8 +194,15 @@ final class CaptureModel {
 
     /// OCR off the main actor, then delete the image: it may hold private data.
     /// Plain `nonisolated async` rather than `@concurrent` keeps the package buildable with Swift 6.0 (Xcode 16 on macOS 14).
-    private nonisolated static func read(_ url: URL, code: Bool, language: String?) async throws -> String {
+    private nonisolated static func read(_ url: URL, code: Bool, language: String?, words: [String]) async throws -> String {
         defer { try? FileManager.default.removeItem(at: url) }
-        return try await Recognizer.text(at: url, code: code, language: language)
+        return Recognizer.applyingCustomWords(try await Recognizer.text(at: url, code: code, language: language), words: words)
+    }
+
+    /// The first web address in `text`: http and https only, so a captured `file:` or app link never opens anything.
+    static func firstLink(in text: String) -> URL? {
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else { return nil }
+        return detector.matches(in: text, range: NSRange(text.startIndex..., in: text)).lazy
+            .compactMap(\.url).first { ["http", "https"].contains($0.scheme?.lowercased()) }
     }
 }
