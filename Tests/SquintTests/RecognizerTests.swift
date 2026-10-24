@@ -102,6 +102,18 @@ struct RecognizerTests {
         #expect(try Recognizer.text(at: url, code: true) == "https://example.com/squint")
     }
 
+    @Test func reportsMissingAndUnreadableFilesDistinctly() throws {
+        let missing = URL.temporaryDirectory.appending(path: "squint-missing-\(UUID().uuidString).png")
+        let missingError = #expect(throws: CocoaError.self) { try Recognizer.text(at: missing, code: true) }
+        #expect(missingError?.code == .fileReadNoSuchFile)
+
+        let notAnImage = URL.temporaryDirectory.appending(path: "squint-text-\(UUID().uuidString).png")
+        try Data("not an image".utf8).write(to: notAnImage)
+        defer { try? FileManager.default.removeItem(at: notAnImage) }
+        let formatError = #expect(throws: CocoaError.self) { try Recognizer.text(at: notAnImage, code: true) }
+        #expect(formatError?.code == .fileReadCorruptFile)
+    }
+
     @Test func metrics() {
         #expect(Metrics.distance("kitten", "sitting") == 3)
         #expect(Metrics.exactLines("a\nb\nc", truth: "a\nx\nc") == 2.0 / 3.0)

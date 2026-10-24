@@ -11,6 +11,9 @@ enum Recognizer {
 
     /// - Parameter language: Plain Mode only; a Vision language code, or nil to detect the language automatically.
     static func text(at url: URL, code: Bool, language: String? = nil) throws -> String {
+        guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else {
+            throw CocoaError(.fileReadNoSuchFile, userInfo: [NSFilePathErrorKey: url.path(percentEncoded: false)])
+        }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
         else { throw CocoaError(.fileReadCorruptFile, userInfo: [NSFilePathErrorKey: url.path(percentEncoded: false)]) }
