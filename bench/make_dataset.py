@@ -219,10 +219,13 @@ def main():
     if "--novel" in sys.argv:
         return make_novel()
     # --dev: a development set for tuning, with a different seed and no snippet shared with the test set.
-    dev = "--dev" in sys.argv
-    out = DATA.parent / "data-dev" if dev else DATA
-    test_snippets = {path.read_text(encoding="utf-8").rstrip("\n") for path in (DATA / "truth").glob("*.txt")} if dev else set()
-    rng = random.Random(SEED + 100 if dev else SEED)
+    # --holdout: a fresh test set for unbiased final numbers, sharing no snippet with the test or dev sets.
+    mode = "dev" if "--dev" in sys.argv else "holdout" if "--holdout" in sys.argv else None
+    out = DATA.parent / f"data-{mode}" if mode else DATA
+    excluded_sets = {"dev": ["data"], "holdout": ["data", "data-dev"]}.get(mode, [])
+    test_snippets = {path.read_text(encoding="utf-8").rstrip("\n")
+                     for name in excluded_sets for path in (DATA.parent / name / "truth").glob("*.txt")}
+    rng = random.Random(SEED + {"dev": 100, "holdout": 200}.get(mode, 0))
     (out / "truth").mkdir(parents=True, exist_ok=True)
     manifest = []
     for language, extension, candidates, parses in [

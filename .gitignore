@@ -8,3 +8,4 @@ bench/data/
 bench/data-novel/
 bench/TRexRunner/.build/
 bench/data-dev/
+bench/data-holdout/
