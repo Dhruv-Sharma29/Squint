@@ -44,7 +44,7 @@ brew services start squint
 open "$(brew --prefix)/opt/squint/Squint.app"
 ```
 
-Squint lives in the menu bar (look for the viewfinder icon) and has no Dock icon.
+Squint lives in the menu bar (look for an eye inside a viewfinder) and has no Dock icon.
 
 ### Why build from source instead of a cask?
 

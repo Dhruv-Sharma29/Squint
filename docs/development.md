@@ -38,7 +38,7 @@ xcrun actool Assets/AppIcon.icon --compile Assets --platform macosx \
 
 Why this format: macOS 26 and later put old-style `.icns` icons, and plain asset-catalog icons, inside a grey rounded square. Only layered `.icon` artwork gets the native shape. Both alternatives were tested and both got the grey container.
 
-The menu bar keeps a monochrome SF Symbol (`text.viewfinder`), as Apple's guidelines expect for menu bar items.
+The menu bar shows a monochrome version of the logo: an eye with `</>` inside a viewfinder. It is drawn in code in `App/MenuBarIcon.swift` as a template image, so like an SF Symbol it stays sharp at every scale and follows light and dark menu bars.
 
 ## Conventions
 

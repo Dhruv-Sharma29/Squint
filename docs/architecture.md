@@ -44,6 +44,7 @@ Folders are organised by feature, with one type per file.
 | `App/AppDelegate.swift` | Owns the model and receives `squint://` links |
 | `App/CaptureModel.swift` | `@MainActor @Observable` state and the capture → recognize → copy flow |
 | `App/MenuContent.swift` | Menu items |
+| `App/MenuBarIcon.swift` | The logo as a monochrome menu bar template image, drawn in code |
 | `App/HotKey.swift` | Global ⌘⇧2 through Carbon `RegisterEventHotKey` |
 | `Capture/ScreenCapture.swift` | Runs `screencapture -i` and returns the captured image file |
 | `Capture/ClipboardImage.swift` | Writes a clipboard image to a temporary file |

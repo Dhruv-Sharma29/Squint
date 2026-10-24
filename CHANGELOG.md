@@ -7,6 +7,7 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 ### Added
 
 - App icon in Apple's layered format, so macOS 26 and later show it in the native shape rather than inside a grey container. It appears in Finder, Spotlight, System Settings and permission prompts.
+- Menu bar icon based on the logo: an eye with `</>` inside a viewfinder, drawn as a template image that follows light and dark menu bars.
 
 ## [0.1.0] - 2026-10-24
 
