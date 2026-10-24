@@ -6,6 +6,6 @@ let package = Package(
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(name: "Squint"),
-        .testTarget(name: "SquintTests", dependencies: ["Squint"]),
+        .testTarget(name: "SquintTests", dependencies: ["Squint"], exclude: ["Fixtures"]), // read by path
     ]
 )

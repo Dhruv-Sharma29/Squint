@@ -188,10 +188,10 @@ struct RecognizerTests {
 
     /// Benchmark screenshots that, during development, came back with emoji that aren't there: a blurred blue `n` read as
     /// 👖, and syntax-highlighted keywords and brackets in a video frame read as 🌑 and 🇸🇦 dozens of times.
-    @Test(arguments: ["data-dev/images/py-16", "data/images/js-17"])
+    @Test(arguments: ["py-16", "js-17"])
     func findsNoEmojiInCodeWithout(_ name: String) async throws {
-        let root = URL(filePath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        let text = try await Recognizer.text(at: root.appending(path: "bench/\(name).png"), code: true)
+        let fixture = URL(filePath: #filePath).deletingLastPathComponent().appending(path: "Fixtures/\(name).png")
+        let text = try await Recognizer.text(at: fixture, code: true)
         #expect(!text.unicodeScalars.contains { $0.properties.isEmojiPresentation })
     }
 
