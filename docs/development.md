@@ -55,7 +55,7 @@ The menu bar shows a monochrome version of the logo: an eye with `</>` inside a 
 
 ## Testing
 
-37 tests in 7 suites, written with Swift Testing. CI runs them on every push ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), together with a build and a signed bundle.
+71 tests in 14 suites, written with Swift Testing. CI runs them on every push ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), together with a build and a signed bundle.
 
 | Suite | Covers |
 |---|---|

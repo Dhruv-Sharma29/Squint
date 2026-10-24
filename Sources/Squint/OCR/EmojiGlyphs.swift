@@ -5,7 +5,7 @@ import Foundation
 /// Every emoji macOS draws in colour, rendered in Apple Color Emoji, the font Mac apps use for emoji: what
 /// `EmojiFinder` compares a screenshot against.
 enum EmojiGlyphs {
-    static let side = 48
+    static let side = 36
 
     struct Glyph {
         let emoji: String
@@ -13,7 +13,8 @@ enum EmojiGlyphs {
         let pixels: [UInt8]
     }
 
-    // ponytail: about 1,470 glyphs × 9 KB = 13 MB, kept once a capture first needs them (0.1 s to render).
+    // About 1,440 glyphs × 5 KB = 7.5 MB, kept once a capture first needs them. Drawn at 26 pt: 34 pt took 25 MB more of a
+    // capture's memory footprint for no better matching, and 20 pt matched worse (74% of emoji found, against 76%).
     static let all: [Glyph] = candidates().compactMap(render)
 
     /// Default-emoji scalars, text-default ones with VS16 (such as ❤️), and country flags.
@@ -43,9 +44,9 @@ enum EmojiGlyphs {
                 data: buffer.baseAddress, width: side, height: side, bitsPerComponent: 8, bytesPerRow: side * 4,
                 space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
             ) else { return false }
-            let font = CTFontCreateWithName("AppleColorEmoji" as CFString, 34, nil)
+            let font = CTFontCreateWithName("AppleColorEmoji" as CFString, 26, nil)
             let line = CTLineCreateWithAttributedString(NSAttributedString(string: emoji, attributes: [.init(kCTFontAttributeName as String): font]))
-            context.textPosition = CGPoint(x: 4, y: 12) // baseline above the descender
+            context.textPosition = CGPoint(x: 3, y: 9) // baseline above the descender
             CTLineDraw(line, context)
             return true
         }

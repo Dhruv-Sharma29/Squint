@@ -13,9 +13,9 @@ To show Squint is better than other tools, you have to measure it. This page cov
 
 ## Headline
 
-On screenshots of real-world code that Squint was never tuned on, **Squint made 2.4–3.4% character errors, against 15.8–19.2% for the OCR built into macOS, Apple Live Text and TRex**: at least 4.6× fewer. It beat each of them on 98 of 99 images, at about 0.13 s per capture, offline.
+On screenshots of real-world code that Squint was never tuned on, **Squint made 2.1–3.0% character errors, against 15.8–19.2% for the OCR built into macOS, Apple Live Text and TRex**: at least 5.4× fewer. It beat each of them on 98 of 99 images, at about 0.14 s per capture, offline.
 
-**An AI chat assistant (Claude) transcribed every image perfectly**, including a set with renamed identifiers it couldn't have memorized. On accuracy alone, Squint does not beat AI chat. Squint gets most lines exactly right (53–71%), but only 8–36% of captures parse as pasted, depending on the set. Usually one or two misread characters are the problem.
+**An AI chat assistant (Claude) transcribed every image perfectly**, including a set with renamed identifiers it couldn't have memorized. On accuracy alone, Squint does not beat AI chat. Squint gets most lines exactly right (57–75%), but only 16–45% of captures parse as pasted, depending on the set. Usually one or two misread characters are the problem.
 
 ## Metrics
 
@@ -49,13 +49,13 @@ Everything is in [`bench/`](../bench/README.md) and can be re-run.
 
 ## Current results
 
-Squint 0.2.0, final build.
+Squint after the Phase 2 accuracy work (October 2026). Version 0.2.0's results are in the history below.
 
 ### Test set (40 images)
 
 | System | Character error rate | Lines exact | Snippet exact | Parses |
 |---|---|---|---|---|
-| **Squint** (Code Mode) | **3.2%** | **61%** | 3/40 | 5/40 |
+| **Squint** (Code Mode) | **3.0%** | **65%** | 6/40 | 11/40 |
 | Apple Vision, default settings | 16.7% | 2% | 0/40 | 0/40 |
 | TRex | 18.6% | 2% | 0/40 | 0/40 |
 | Apple Live Text | 18.8% | 4% | 0/40 | 0/40 |
@@ -67,7 +67,7 @@ Per image, Squint had fewer errors than Apple Vision, TRex and Live Text on all 
 
 | System | Character error rate | Lines exact | Snippet exact | Parses |
 |---|---|---|---|---|
-| **Squint** (Code Mode) | **3.4%** | **53%** | 3/37 | 3/37 |
+| **Squint** (Code Mode) | **2.9%** | **57%** | 4/37 | 6/37 |
 | Apple Vision, default settings | 15.8% | 2% | 0/37 | 0/37 |
 | TRex | 17.7% | 1% | 0/37 | 0/37 |
 | Apple Live Text | 17.9% | 2% | 0/37 | 0/37 |
@@ -77,23 +77,23 @@ Per image, Squint had fewer errors than Apple Vision, TRex and Live Text on all 
 
 | System | Character error rate | Lines exact | Snippet exact | Parses |
 |---|---|---|---|---|
-| **Squint** (Code Mode) | **2.4%** | **71%** | 3/22 | 8/22 |
+| **Squint** (Code Mode) | **2.1%** | **75%** | 4/22 | 10/22 |
 | Apple Vision, default settings | 17.5% | 6% | 0/22 | 0/22 |
 | Apple Live Text | 19.0% | 2% | 0/22 | 0/22 |
 | TRex | 19.2% | 5% | 0/22 | 0/22 |
 
-Squint beat Apple Vision and Live Text on 21 of 22 images and TRex on all 22 (p ≤ 1.1 × 10⁻⁵).
+Squint beat Apple Vision, Live Text and TRex on all 22 images (p = 4.8 × 10⁻⁷).
 
 ### Conditions (test set, Squint)
 
 | Condition | Character error rate |
 |---|---|
-| Retina screenshot | 2.9% |
-| Paused 1080p video | 3.2% |
-| Paused 720p video | 3.6% |
-| No line numbers / with line numbers | 2.7% / 4.1% |
+| Retina screenshot | 2.7% |
+| Paused 1080p video | 3.0% |
+| Paused 720p video | 3.3% |
+| No line numbers / with line numbers | 2.5% / 3.8% |
 
-**Speed:** median 0.12–0.13 s per image (95th percentile 0.14–0.15 s), including process start-up, on Apple silicon.
+**Speed:** 0.14 s per recognition in a running app, on Apple silicon. A cold one-off `squint` run, including start-up, took 0.43 s at the median and 0.48 s at the 95th percentile.
 
 Per-image scores: [`bench/results-data.csv`](../bench/results-data.csv), [`results-data-novel.csv`](../bench/results-data-novel.csv), [`results-data-holdout.csv`](../bench/results-data-holdout.csv) and [`results-data-dev.csv`](../bench/results-data-dev.csv).
 
@@ -141,9 +141,14 @@ Test-set character error rate after each change. Every change was developed on t
 | 0.1.0 | Code layout pass | 7.1% | 7.4% |
 | | Remove line-number gutters (first version) | 4.1% | 3.7% |
 | | Code-only misread repairs | 3.4% | 3.9% |
-| 0.2.0 | Gutters detected from as few as two readable numbers | **3.2%** | **3.4%** |
+| 0.2.0 | Gutters detected from as few as two readable numbers | 3.2% | 3.4% |
+| Phase 2 | Language-aware repairs, parse-guided repair, bracket handling, spacing from pixels | **3.0%** | **2.9%** |
 
 **Being honest about the last row:** the misread repairs made two renamed-set images worse. The cause was a gutter safety check that one merged, misread number could veto. That fix was prompted by looking at test-set results, so the test sets are no longer fully untouched for that rule. That's why the **fresh held-out set** exists: it was built after all development, and is the cleanest estimate (2.4%).
+
+**Phase 2, honestly:** the development set improved far more than the unseen sets (character errors 3.1% → 1.7%, lines exact 68% → 82%, parsing 8 → 28 of 40), the usual sign of rules fitted to the data they were built from. On the unseen sets, character errors fell by 0.2–0.4 points and parsing roughly doubled (test 5 → 11 of 40, held-out 8 → 10 of 22). Five of 102 test images got slightly worse, mostly where Vision missed an opening brace and a repair then lined a `}` up with the wrong one. Looking at those five led to two bug fixes (alignment limited to brace languages, so Python's `)` stays where Vision read it); the numbers above include them, so the test sets are no longer fully untouched for those two rules.
+
+**Measured dead ends in Phase 2:** recovering underscores from the pixels (drawing them again for a second reading) helped some images and hurt as many, net zero on the development set, and was reverted. Taking the smallest gap between rows as the line spacing made five development images worse, so only captures of two or three rows use it.
 
 **A measured dead end:** rebuilding the spaces in each line from Vision's per-word positions raised development-set errors from 4.1% to 12.5%. In accurate mode, Vision's word boxes are too approximate for that. The change was reverted and is documented in the code.
 

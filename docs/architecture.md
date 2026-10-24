@@ -156,8 +156,9 @@ Measured on Apple silicon, macOS 27.0.1.
 
 | Measurement | Result |
 |---|---|
-| Recognition per capture, including process start-up (benchmark) | median 0.12–0.13 s, 95th percentile 0.14–0.15 s |
-| Typical capture (code region) | 0.13 s, 66 MB peak memory |
+| Recognition per capture in a running process (benchmark) | 0.14 s on average |
+| A one-off `squint` run, including start-up | median 0.43 s, 95th percentile 0.48 s |
+| Typical capture (code region), one-off run | peak memory footprint about 120 MB (0.2.0: about 90 MB). Most of the difference is emoji support: drawing every emoji once for comparison, and keeping them (7.5 MB). |
 | Worst case: a full 5K-display capture (5120 × 2549) | 0.27 s, 231 MB peak, released afterwards. `InkMap` holds a full-colour copy of the image. |
 | Menu bar app at idle | 75 MB resident, 0% CPU, 3 threads |
 | Repeated recognitions in one process | 80 in a row with identical accuracy to separate processes: no sign of the macOS 27 Vision regression TRex reported |

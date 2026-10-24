@@ -9,9 +9,10 @@ The order is deliberate. **Measure first** (Phase 0), add the small expected fea
 | Phase | Status |
 |---|---|
 | 0: Benchmark | **Done.** 40 real-code screenshots plus a renamed-identifier copy, five systems. See [Evaluation](evaluation.md). |
-| 1: Expected features | **Mostly done.** Settings, custom shortcut, open at login, Plain Mode language and Spotlight/Shortcuts actions shipped. A custom word list and hiding the menu bar icon are open. |
-| 2: Code accuracy | **Items 1 and 1b partly done** (line numbers, code-only misreads): test-set error rate 7.1% → 3.2%; fresh held-out set 2.4%. Items 2–7 open. |
-| 3, 4 | CI is done; the rest is open. |
+| 1: Expected features | **Done.** Settings, custom shortcut, open at login, Plain Mode language, Spotlight/Shortcuts actions, custom words, opening links, and hiding the menu bar icon. |
+| 2: Code accuracy | **Every item built and measured.** Test-set character errors 7.1% → 3.0%, lines exact 61% → 65%, snippets that parse 5 → 11 of 40; fresh held-out set 2.1%, 75%, 10 of 22. Parse rate is still far from the 90% target. |
+| 3: Structure beyond code | **Done.** Tables (macOS 26 or later), opt-in capture history, and a Hindi–English benchmark that led to reading a second preferred language when detection is unsure. |
+| 4: Distribution and trust | **Partly done.** CI and a release script. The one-command tap is ready to publish; signing, notarization, an official cask and auto-update need an Apple Developer ID (see below). |
 
 **What the benchmark changed:** an AI chat assistant transcribed every test image perfectly, so Squint can't claim to be the most accurate option overall. Its case is the most accurate *on-device* option, 4.6–8× fewer errors than the OCR built into macOS, at 0.13 s per capture, free and private. The plan below reflects that.
 
@@ -102,14 +103,14 @@ This is where Squint wins. Work in order of measured impact: re-rank this list u
 | # | Improvement | Why it matters |
 |---|---|---|
 | ~~1~~ | ~~**Remove line-number gutters**~~ | **Done.** Line-numbered test images went from 13.9% to 4.1% character errors, including gutters where Vision reads only two numbers. |
-| 1b | **Fix code-only misreads** | **Partly done:** `{` read as `f`/`t`, lone `}` read as `8`/`)`/`]`, template-literal backticks, `\|\|`. Still open: dropped `=` and `_`, `L`/`l`. These are now the largest error source. |
+| 1b | **Fix code-only misreads** | **Mostly done:** `{` read as `f`/`t`/`i`/`(`, lone `}` read as `8`/`)`/`]`, template-literal backticks, `\|\|` read as `Il`/`I1`, `=>` read as `>`, `({` read as `(t`, `[` read as `I`, quotes read as `i`, lookalike Cyrillic letters, `} catch`/`} else` without `}`, Python `def__init__`. Still open: dropped `=` and `_` (tried pixel-level underscores: net zero, reverted), `L`/`l`. |
 | ~~2a~~ | ~~Rebuild spacing from Vision's word boxes~~ | **Tried and reverted:** dev-set errors rose from 4.1% to 12.5%; Vision's word boxes are too approximate. Needs pixel-level gap detection instead. |
-| 2 | **Character-level spacing**: split Vision boxes at spaces with `VNRecognizedText.boundingBox(for:)` | Keeps aligned comments and runs of spaces, the one error left in the smoke test |
-| 3 | **Bracket repair that understands code**: ignore brackets in strings and comments; restore `});`, `})` and `]);` in the order they were opened | Removes today's biggest known limitation |
-| 4 | **Detect the language** (Python, JavaScript, Swift, Java, C-family) from keywords and syntax | Enables language-specific repair, such as no braces in Python and checking semicolons in C-family code |
-| 5 | **Repair guided by parsing**: generate candidate fixes and keep the one that parses, when the language's tool is installed | Something no general OCR tool does; measured directly by the parse rate |
-| 6 | **Copy as Markdown**: optional fenced code block with a language tag | Pastes straight into README files, chats and LLM prompts |
-| 7 | **Scroll capture**: several captures while scrolling a long file or video, merged by overlapping lines | Gets a whole file from a long tutorial. TRex's watch mode is the nearest equivalent but doesn't understand code. |
+| ~~2~~ | ~~**Character-level spacing**~~ | **Done, differently:** `boundingBox(for:)` turned out to return whole-word boxes, so runs of spaces are measured from the gaps in the pixels instead, matched to the line's spaces only when the counts agree. |
+| ~~3~~ | ~~**Bracket repair that understands code**~~ | **Done:** brackets in strings and comments are ignored, a callback's `})` is restored, and a `}` lines up with its opener in brace languages. |
+| ~~4~~ | ~~**Detect the language**~~ | **Done:** Python or brace languages for repairs, and a finer guess (Swift, Rust, Go, TypeScript, JavaScript, Python, Java, C++, SQL, shell) for Markdown tags. |
+| ~~5~~ | ~~**Repair guided by parsing**~~ | **Done:** JavaScriptCore in-process for JavaScript, an installed Python for Python; a fix is kept only if the whole snippet then parses, and nothing that isn't on screen is added. |
+| ~~6~~ | ~~**Copy as Markdown**~~ | **Done:** an optional setting. |
+| ~~7~~ | ~~**Scroll capture**~~ | **Done:** a session in the menu; parts are joined by the lines they share. |
 
 **Done when:** on the held-out set, Squint beats both TextSniper and TRex on character error rate, exact lines and parse rate. Targets are under [Success metrics](#success-metrics).
 
@@ -125,12 +126,12 @@ This is where Squint wins. Work in order of measured impact: re-rank this list u
 
 | Step | Effect |
 |---|---|
-| `homebrew-tap` repository | `brew install dhruv-sharma29/tap/squint`: one command instead of three |
+| `homebrew-tap` repository | **Ready, not published:** creating a public repository is for the owner to approve. Then `brew install dhruv-sharma29/tap/squint` is the whole install. |
 | ~~GitHub Actions CI~~ | **Done:** build, tests and a signed bundle on every push |
-| Release script | Tag → compute checksum → update formula, in one step |
-| Apple Developer ID ($99 a year) | Signed and notarized downloads. Also keeps the Screen Recording permission across updates, since ad-hoc builds lose it. |
+| ~~Release script~~ | **Done:** [`scripts/release.sh`](../scripts/release.sh) checks CI, sets the version, tags, verifies the archive's checksum twice and updates the formula (and the tap's). |
+| Apple Developer ID ($99 a year) | **Needs the owner's paid account.** Signed and notarized downloads; Spotlight actions for everyone; keeps the Screen Recording permission across updates, which ad-hoc builds lose. `bundle.sh` already signs with any identity in `SQUINT_SIGN_IDENTITY`. |
 | Official Homebrew cask | Needs signing and notarization, plus Homebrew's notability bar: 75 stars or 30 forks or watchers, or 225 stars or 90 forks or watchers for a self-submission, and a repository at least 30 days old |
-| Auto-update | Sparkle for direct downloads; Homebrew users already have `brew upgrade` |
+| Auto-update | **Not needed yet:** Homebrew users have `brew upgrade`. Sparkle becomes useful with notarized direct downloads, after the Developer ID. |
 
 ## Not planned
 
@@ -142,16 +143,16 @@ This is where Squint wins. Work in order of measured impact: re-rank this list u
 
 ## Success metrics
 
-Measured on the 40-image test set (rendered screenshots) with Squint 0.2.0, October 2026.
+Measured on the 40-image test set (rendered screenshots) after Phase 2, October 2026.
 
 | Metric | Target | Now | Met? |
 |---|---|---|---|
-| Character error rate | At most **half** of the better of TextSniper and TRex | 3.2% vs TRex 18.6% (TextSniper not measurable) | ✓ for TRex |
-| Lines exact | At least **20 points** above the better competitor | 61% vs TRex 2% | ✓ |
-| Parse rate for complete snippets | **90% or higher** | 12% (5 of 40); 36% on the fresh held-out set | ✗ — the main open problem |
-| Selection-to-clipboard time | **Under 1 s** at the 95th percentile | 0.15 s (recognition, CLI) | ✓ |
+| Character error rate | At most **half** of the better of TextSniper and TRex | 3.0% vs TRex 18.6% (TextSniper not measurable) | ✓ for TRex |
+| Lines exact | At least **20 points** above the better competitor | 65% vs TRex 2% | ✓ |
+| Parse rate for complete snippets | **90% or higher** | 28% (11 of 40); 45% (10 of 22) on the fresh held-out set | ✗: the main open problem |
+| Selection-to-clipboard time | **Under 1 s** at the 95th percentile | 0.14 s per recognition; 0.48 s for a cold one-off `squint` run, including start-up | ✓ |
 | User check | **4 of 5** users paste and run a snippet without editing it | Not run yet | — |
-| Regressions | None on existing benchmark images | One round regressed two renamed-set images; fixed and re-measured on a fresh held-out set | ✓ |
+| Regressions | None on existing benchmark images | Phase 2 left 5 of 102 test images slightly worse (Vision missed an opener and a repair followed it); none on the development set | ✗: small, recorded in [Evaluation](evaluation.md) |
 
 ## Risks
 

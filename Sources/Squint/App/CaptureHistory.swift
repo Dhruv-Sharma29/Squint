@@ -38,7 +38,9 @@ final class CaptureHistory {
     private func save() {
         do {
             try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try JSONEncoder().encode(entries).write(to: file, options: [.atomic, .completeFileProtection])
+            // Owner-only permissions are the protection. Data Protection's `.completeFileProtection` made the write fail
+            // in some environments (the temporary file for the atomic write was refused) and adds nothing here.
+            try JSONEncoder().encode(entries).write(to: file, options: .atomic)
             try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path(percentEncoded: false))
         } catch {
             // History is a convenience: a capture still reaches the clipboard if it can't be saved.

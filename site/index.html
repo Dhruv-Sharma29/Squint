@@ -421,14 +421,14 @@ footer p { margin: 0; }
       <div class="bench">
         <figure class="bars">
           <figcaption>Character error rate on 40 test screenshots (lower is better)</figcaption>
-          <div class="bar-row us"><span>Squint</span><b><i style="width: 16%"></i><em style="left: calc(16% + 0.5rem)">3.2%</em></b></div>
+          <div class="bar-row us"><span>Squint</span><b><i style="width: 15%"></i><em style="left: calc(15% + 0.5rem)">3.0%</em></b></div>
           <div class="bar-row"><span>Apple Vision, default</span><b><i style="width: 83.5%"></i><em style="left: calc(83.5% + 0.5rem)">16.7%</em></b></div>
           <div class="bar-row"><span>Apple Live Text</span><b><i style="width: 94%"></i><em style="left: calc(94% - 3.6rem); color: #fff">18.8%</em></b></div>
         </figure>
         <dl class="facts">
-          <div><dt>2.4%</dt><dd>character errors on a fresh held-out set nothing was developed on</dd></div>
-          <div><dt>61%</dt><dd>of lines exactly right, against 2–4% for built-in OCR</dd></div>
-          <div><dt>0.13 s</dt><dd>from selection to clipboard, offline</dd></div>
+          <div><dt>2.1%</dt><dd>character errors on a fresh held-out set nothing was developed on</dd></div>
+          <div><dt>65%</dt><dd>of lines exactly right, against 2–4% for built-in OCR</dd></div>
+          <div><dt>0.14 s</dt><dd>from selection to clipboard, offline</dd></div>
         </dl>
       </div>
       <p class="caveat"><strong>The honest part:</strong> most captures still need a small fix before they run, because one misread character is enough to stop code compiling. An AI chat assistant transcribed every benchmark image perfectly; Squint's advantage over it is speed, privacy and cost. The <a href="https://github.com/Dhruv-Sharma29/Squint/blob/main/docs/evaluation.md">full evaluation</a> has every number, including where Squint loses.</p>
@@ -500,7 +500,7 @@ footer p { margin: 0; }
         <details><summary>Why not paste the screenshot into an AI chatbot?</summary>
           <p>On Squint's benchmark, an AI chat assistant transcribed every image perfectly, and Squint didn't. Squint's case is different: one shortcut and about a tenth of a second instead of an upload, a prompt and a wait; it works offline; your screen never leaves your Mac, which matters for work code and exams; and it's free with no limits.</p></details>
         <details><summary>How accurate is it?</summary>
-          <p>Across 99 benchmark images, Squint averaged 2.4–3.4% character errors, against 15.8–19.2% for the OCR built into macOS, and got 53–71% of lines exactly right. Most captures still need a small fix before they run, usually one misread character. The <a href="https://github.com/Dhruv-Sharma29/Squint/blob/main/docs/evaluation.md">evaluation</a> has every number.</p></details>
+          <p>Across 99 benchmark images, Squint averaged 2.1–3.0% character errors, against 15.8–19.2% for the OCR built into macOS, and got 57–75% of lines exactly right. When a capture doesn't parse, Squint tries fixes that would make it parse, but most captures still need a small fix before they run, usually one misread character. The <a href="https://github.com/Dhruv-Sharma29/Squint/blob/main/docs/evaluation.md">evaluation</a> has every number.</p></details>
         <details><summary>Does it work offline?</summary>
           <p>Yes. Recognition uses Apple's on-device Vision framework, and Squint makes no network requests. It produces identical output with all network access blocked.</p></details>
         <details><summary>Which languages does it read?</summary>
