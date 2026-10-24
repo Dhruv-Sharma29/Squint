@@ -25,6 +25,10 @@
            barcode found? ─┼─ yes ─► barcode payloads
                            │ no
                            ▼
+       find emoji; if any, draw `##` over them, run Vision
+       again, and swap each `##` back for its emoji
+                           │
+                           ▼
                 group text boxes into rows
                            │
           Plain Mode ──────┼────── Code Mode
@@ -64,6 +68,8 @@ Folders are organised by feature, with one type per file.
 | `OCR/TextBox.swift` | One run of recognized text and its bounds |
 | `OCR/Slot.swift` | One output row: text, unreadable ink, or blank |
 | `OCR/InkMap.swift` | Pixel access used to find glyphs Vision skipped |
+| `OCR/EmojiFinder.swift` | Finds colour emoji, which Vision can't read, and puts them back into the text |
+| `OCR/EmojiGlyphs.swift` | Every emoji rendered in Apple Color Emoji, for comparison |
 | `Eval/Metrics.swift` | Edit distance, character error rate, exact-line rate |
 | `Eval/CLI.swift` | `squint <image>` and `squint eval` |
 | `Formula/squint.rb` | Homebrew formula |
@@ -175,5 +181,6 @@ Measured on Apple silicon, macOS 27.0.1.
 - **Runs of spaces inside one Vision box** collapse to a single space, for example two spaces before an inline comment.
 - **Line numbers** are removed only when they form a right-aligned column of increasing numbers on at least half the rows. Left-aligned or sparse gutters are kept.
 - **Docstrings:** only a lone `"""` right after a `def` or `class` line is restored; other lone quotes come back as blank lines.
+- **Emoji:** about three in four are found (half of those under 20 px), only in Apple's emoji art, without skin-tone or multi-person variants, and grey or black ones (🌑, ⚫) are hard to tell from text. In proportional fonts, Vision may add a space beside an emoji that touches a quote. See [Evaluation](evaluation.md#emoji).
 - **Character misreads** Vision makes (dropped `=` and `_`, `L` read as `l`) are not corrected. They're the largest remaining error source on the benchmark.
 - **Spacing inside a line** comes from Vision's text, which sometimes adds a space before `(` or collapses runs of spaces. Rebuilding it from Vision's word positions was tried and made results worse (see [Evaluation](evaluation.md#how-squint-got-here)).

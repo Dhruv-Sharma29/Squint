@@ -30,14 +30,7 @@ enum Recognizer {
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
         else { throw CocoaError(.fileReadCorruptFile, userInfo: [NSFilePathErrorKey: url.path(percentEncoded: false)]) }
 
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = !code // English autocorrect mangles identifiers and symbols
-        if !code, let language {
-            request.recognitionLanguages = [language]
-        } else {
-            request.automaticallyDetectsLanguage = !code // helps prose in other languages; code is mostly ASCII
-        }
+        let request = textRequest(code: code, language: language)
         let barcodes = VNDetectBarcodesRequest()
         try VNImageRequestHandler(cgImage: image).perform([request, barcodes])
 
@@ -45,9 +38,31 @@ enum Recognizer {
         let payloads = (barcodes.results ?? []).compactMap(\.payloadStringValue)
         if !payloads.isEmpty { return payloads.joined(separator: "\n") }
 
-        let boxes = (request.results ?? []).flatMap { observation -> [TextBox] in
+        var observations = request.results ?? []
+        let ink = InkMap(image)
+        let size = CGSize(width: image.width, height: image.height)
+        let emoji = ink.map { EmojiFinder.find(in: $0, letters: { letterBoxes(observations, imageSize: size) }) } ?? []
+        // Vision skips emoji or misreads them, and can drop the text after one. With `#` drawn in their place it reads
+        // whole lines, and `restoring` puts the emoji back.
+        if !emoji.isEmpty, let marked = EmojiFinder.marking(emoji, in: image) {
+            let again = textRequest(code: code, language: language)
+            try VNImageRequestHandler(cgImage: marked).perform([again])
+            observations = again.results ?? []
+        }
+
+        var restored: Set<Int> = []
+        var boxes = observations.flatMap { observation -> [TextBox] in
             guard let candidate = observation.topCandidates(1).first, !candidate.string.isEmpty else { return [] }
-            return splittingLeadingNumber(candidate, rect: observation.boundingBox)
+            guard !emoji.isEmpty else { return splittingLeadingNumber(candidate, text: candidate.string, rect: observation.boundingBox) }
+            let (text, used) = EmojiFinder.restoring(emoji, in: candidate, line: observation.boundingBox, imageSize: size)
+            restored.formUnion(used)
+            return splittingLeadingNumber(candidate, text: text, rect: observation.boundingBox)
+        }
+        // Emoji whose placeholder Vision didn't read, such as a line of nothing but emoji, go in by position.
+        boxes += emoji.indices.filter { !restored.contains($0) }.map { index in
+            let rect = emoji[index].rect
+            return TextBox(text: emoji[index].emoji, rect: CGRect(x: rect.minX / size.width, y: 1 - rect.maxY / size.height,
+                                                                  width: rect.width / size.width, height: rect.height / size.height))
         }
 
         let rows = group(boxes)
@@ -56,7 +71,31 @@ enum Recognizer {
         // number are gone, and spacing measured from what's left would double and hide the gaps.
         let pitch = linePitch(rows)
         let (codeRows, gutterEnd) = removingLineNumbers(rows)
-        return render(slots(codeRows, ink: InkMap(image), scanFrom: gutterEnd, pitch: pitch))
+        return render(slots(codeRows, ink: ink, scanFrom: gutterEnd, pitch: pitch))
+    }
+
+    private static func textRequest(code: Bool, language: String?) -> VNRecognizeTextRequest {
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = !code // English autocorrect mangles identifiers and symbols
+        if !code, let language {
+            request.recognitionLanguages = [language]
+        } else {
+            request.automaticallyDetectsLanguage = !code // helps prose in other languages; code is mostly ASCII
+        }
+        return request
+    }
+
+    /// Boxes of the letters and digits Vision read, in pixels with the origin top-left.
+    private static func letterBoxes(_ observations: [VNRecognizedTextObservation], imageSize size: CGSize) -> [CGRect] {
+        observations.flatMap { observation -> [CGRect] in
+            guard let candidate = observation.topCandidates(1).first else { return [] }
+            let text = candidate.string
+            return text.indices.filter { text[$0].isLetter || text[$0].isNumber }.compactMap { index in
+                guard let box = try? candidate.boundingBox(for: index..<text.index(after: index))?.boundingBox else { return nil }
+                return CGRect(x: box.minX * size.width, y: (1 - box.maxY) * size.height, width: box.width * size.width, height: box.height * size.height)
+            }
+        }
     }
 
     /// Removes an editor's line-number gutter: at least two right-aligned, increasing integers at the far left, with all
@@ -102,11 +141,15 @@ enum Recognizer {
     /// candidate's own character geometry, so gutter detection sees it. Without a gutter the pieces rejoin as before.
     // Measured dead end: splitting every word this way to rebuild spacing from on-screen gaps raised the dev-set
     // character error rate from 4.1% to 12.5%; Vision's word boxes in accurate mode are too approximate for that.
-    private static func splittingLeadingNumber(_ candidate: VNRecognizedText, rect: CGRect) -> [TextBox] {
-        let text = candidate.string
+    /// `text` is the candidate's string with any emoji restored; a line number comes before any emoji, so the two agree
+    /// up to the split.
+    private static func splittingLeadingNumber(_ candidate: VNRecognizedText, text: String, rect: CGRect) -> [TextBox] {
+        let read = candidate.string
         guard let match = text.firstMatch(of: /^(\d{1,4})\s+(?=\S)/),
-              let numberRect = try? candidate.boundingBox(for: text.startIndex..<match.1.endIndex)?.boundingBox,
-              let restRect = try? candidate.boundingBox(for: match.range.upperBound..<text.endIndex)?.boundingBox
+              case let split = text.distance(from: text.startIndex, to: match.range.upperBound),
+              case let digits = match.1.count,
+              let numberRect = try? candidate.boundingBox(for: read.startIndex..<read.index(read.startIndex, offsetBy: digits))?.boundingBox,
+              let restRect = try? candidate.boundingBox(for: read.index(read.startIndex, offsetBy: split)..<read.endIndex)?.boundingBox
         else { return [TextBox(text: text, rect: rect)] }
         return [TextBox(text: String(match.1), rect: numberRect), TextBox(text: String(text[match.range.upperBound...]), rect: restRect)]
     }

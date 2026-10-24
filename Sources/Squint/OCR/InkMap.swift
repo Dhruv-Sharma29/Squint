@@ -3,9 +3,10 @@ import CoreGraphics
 /// Pixel access for spotting glyphs Vision skipped, such as a lone `}`.
 // ponytail: background = top-left pixel, fine for flat editor themes; gradients/wallpapers need a real background estimate.
 struct InkMap {
-    private let pixels: [UInt8]
-    private let width: Int
-    private let height: Int
+    /// Premultiplied RGBA, top row first.
+    let pixels: [UInt8]
+    let width: Int
+    let height: Int
 
     init?(_ image: CGImage) {
         let width = image.width, height = image.height

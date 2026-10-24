@@ -3,7 +3,8 @@ import Foundation
 import Testing
 @testable import Squint
 
-@Suite(.timeLimit(.minutes(1)))
+// Three minutes: unoptimized test builds compare screenshots with every emoji slowly, CI's machines slower still.
+@Suite(.timeLimit(.minutes(3)))
 struct RecognizerTests {
     @Test func indentsSnapToSmallestStep() {
         let charWidth = 0.01
@@ -169,6 +170,29 @@ struct RecognizerTests {
             return try await group.reduce(into: []) { $0.append($1) }
         }
         #expect(texts == Array(repeating: "let answer = 42", count: count))
+    }
+
+    /// Vision can't read emoji: it skips them or reads `:`, and can drop the text after one, such as the `")` here.
+    @Test func keepsEmojiInCode() async throws {
+        let code = "let cat = \"🐱\"\n// 🚀 ship it\nprint(\"done ✅\")\n🚀Launch day\nx=🚀+1"
+        let url = try CodeImage.write(code)
+        defer { try? FileManager.default.removeItem(at: url) }
+        #expect(try await Recognizer.text(at: url, code: true) == code)
+    }
+
+    @Test func readsALineOfOnlyEmoji() async throws {
+        let url = try CodeImage.write("🚀 🎉 🐛")
+        defer { try? FileManager.default.removeItem(at: url) }
+        #expect(try await Recognizer.text(at: url, code: true) == "🚀 🎉 🐛")
+    }
+
+    /// Benchmark screenshots that, during development, came back with emoji that aren't there: a blurred blue `n` read as
+    /// 👖, and syntax-highlighted keywords and brackets in a video frame read as 🌑 and 🇸🇦 dozens of times.
+    @Test(arguments: ["data-dev/images/py-16", "data/images/js-17"])
+    func findsNoEmojiInCodeWithout(_ name: String) async throws {
+        let root = URL(filePath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let text = try await Recognizer.text(at: root.appending(path: "bench/\(name).png"), code: true)
+        #expect(!text.unicodeScalars.contains { $0.properties.isEmojiPresentation })
     }
 
     @Test func reportsMissingAndUnreadableFilesDistinctly() async throws {

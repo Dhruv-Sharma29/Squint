@@ -97,6 +97,25 @@ Squint beat Apple Vision and Live Text on 21 of 22 images and TRex on all 22 (p 
 
 Per-image scores: [`bench/results-data.csv`](../bench/results-data.csv), [`results-data-novel.csv`](../bench/results-data-novel.csv), [`results-data-holdout.csv`](../bench/results-data-holdout.csv) and [`results-data-dev.csv`](../bench/results-data-dev.csv).
 
+## Emoji
+
+Vision can't read emoji. It skips them or reads `:` or `*`, and it can drop the text after one: `console.log("done ✅")` came back as `console.log("done`. Squint finds glyph-sized, shaded or colourful blobs, compares each with all 1,436 emoji in Apple Color Emoji, and keeps only close matches that no other emoji comes near. It then draws `##` over each emoji, lets Vision read the line again, and swaps the `##` back.
+
+**Method.** 300 lines rendered with random emoji (out of all 1,436), code words in syntax colours and plain text: light and dark themes, monospaced and proportional fonts, 12–36 pt, at 1× and 2×. Scored end to end through the `squint` command. A separate check: the 142 benchmark screenshots, which contain no emoji, must come out unchanged.
+
+| | Before | After |
+|---|---|---|
+| Emoji found | 0 of 465 | **354 of 465 (76%)** |
+| Emoji wrong or invented | — | **0** |
+| Lines exactly right | 49 of 300 | **162 of 300** |
+| Benchmark screenshots changed | — | **0 of 142** |
+
+By on-screen size: 32 px and larger, 85%; 20–31 px, 78%; under 20 px, 50%. Code at 13 pt on a Retina display is about 26 px.
+
+**Speed.** About 35 ms more per capture (0.08 → 0.12 s on the benchmark), and 0.1 s once, the first time emoji glyphs are needed.
+
+**Limits.** Rendered lines, not real screenshots; Apple's emoji art only (screenshots from Windows, Android or many websites use other art); no skin-tone, multi-person or keycap sequences. The detector was tuned on these rendered lines and the benchmark images, so the numbers are optimistic until it's scored on fresh real screenshots.
+
 ## How Squint got here
 
 Test-set character error rate after each change. Every change was developed on the development set.

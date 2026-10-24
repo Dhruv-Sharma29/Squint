@@ -2,6 +2,12 @@
 
 All notable changes to Squint are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Emoji.** Vision can't read emoji, and it could drop the text after one: `console.log("done ✅")` came back as `console.log("done`. Squint now recognizes emoji by comparing them with Apple Color Emoji, and reads the text around them in full. On 300 rendered test lines, 76% of emoji are found and none are wrong or invented; small emoji are found less often. See [Evaluation](docs/evaluation.md#emoji).
+
 ## [0.2.0] - 2026-10-24
 
 ### Added

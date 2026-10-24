@@ -117,7 +117,7 @@ MIT-licensed, with no trial and no upsell. Every line is open to read, learn fro
 </tr>
 </table>
 
-**Also reads** QR codes and barcodes, screenshots on the clipboard, image files copied in Finder, and prose in up to 33 languages (including Hindi on macOS 27), with automatic language detection.
+**Also reads** emoji, QR codes and barcodes, screenshots on the clipboard, image files copied in Finder, and prose in up to 33 languages (including Hindi on macOS 27), with automatic language detection.
 
 ## Install
 
