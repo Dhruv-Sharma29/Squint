@@ -71,7 +71,8 @@ enum Recognizer {
         // number are gone, and spacing measured from what's left would double and hide the gaps.
         let pitch = linePitch(rows)
         let (codeRows, gutterEnd) = removingLineNumbers(rows)
-        return render(slots(codeRows, ink: ink, scanFrom: gutterEnd, pitch: pitch))
+        let rendered = render(slots(codeRows, ink: ink, scanFrom: gutterEnd, pitch: pitch))
+        return ParseRepair.repairing(rendered, language: CodeLanguage.detect(rendered.components(separatedBy: "\n")))
     }
 
     /// Spells words one letter away from a custom word the way the word list does (`Flaxmers` → `Flaxmere`). Vision's own
@@ -195,6 +196,7 @@ enum Recognizer {
         var open: [Opener] = []
         var lines: [String] = []
         var inDocstring = false
+        var docstringIndent = 0 // where the open docstring's `"""` is
         var previousText: String?
         for (index, slot) in slots.enumerated() {
             switch slot {
@@ -203,8 +205,12 @@ enum Recognizer {
             case .ink(let indent):
                 let padding = String(repeating: " ", count: indent)
                 let opensDocstring = open.isEmpty && previousText?.wholeMatch(of: /\s*(async\s+)?(def|class)\b.*:\s*/) != nil
-                if inDocstring || opensDocstring {
+                if inDocstring, indent < docstringIndent {
+                    // A docstring closes no further left than it opens: this row is a blank line inside it.
+                    lines.append("")
+                } else if inDocstring || opensDocstring {
                     lines.append(padding + "\"\"\"")
+                    docstringIndent = indent
                     inDocstring.toggle()
                 } else if let opener = open.popLast(), let closer = pairs[opener.bracket] {
                     // The closer for the innermost open bracket, lined up with the line that opened it. Measured ink
@@ -274,6 +280,7 @@ enum Recognizer {
                     }
                 }
                 if text.ranges(of: "\"\"\"").count % 2 == 1 {
+                    if !inDocstring { docstringIndent = indent }
                     inDocstring.toggle()
                 }
                 previousText = text
