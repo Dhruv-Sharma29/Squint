@@ -76,14 +76,16 @@ Folders are organised by feature, with one type per file.
 Vision returns a list of text boxes. Each box is one recognized string with a bounding box in normalized coordinates, with the origin at the bottom-left. Code Mode turns those boxes back into source code in seven steps.
 
 1. **Group into rows.** Boxes whose vertical centres are within half a box height of each other form one row, ordered left to right. If Vision merged an editor line number with the code after it ("12  return x"), the number is split off using the candidate's own character geometry.
-2. **Remove a line-number gutter.** If at least half the rows start with an integer, those integers mostly increase, and they end at about the same x (a right-aligned column), the column is removed, including misread numbers such as `l7`. Line spacing is measured *before* removal, because rows that held only a number still mark where a line is.
+2. **Remove a line-number gutter.** At least two rows must start with an integer; those integers must mostly increase and end at about the same x (a right-aligned column); and on at least 80% of rows the code must start clearly to the right. Vision often reads only 1–3 of 11 numbers, so the empty column is the stronger evidence. The column is removed, including misread numbers such as `l7` and misread numbers merged with code (`4O  return`). Line spacing is measured *before* removal, because rows that held only a number still mark where a line is.
 3. **Estimate character width.** For each box with at least 4 characters, divide its width by its character count. The median is the character width. This assumes a monospaced font.
 4. **Estimate line pitch.** The median vertical distance between consecutive rows. A gap of *n* pitches between two rows means *n − 1* rows are missing.
 5. **Check missing rows for ink.** For each missing row, `InkMap` scans a band 0.4 × the median text height either side of where the row should be. It looks for pixels that differ from the background by more than 64/255 in any channel. The same check runs below the last recognized row. A row with ink becomes `.ink`, meaning there is a glyph Vision didn't read. A row without ink becomes `.blank`. With a gutter, the scan starts right of it, so line numbers never count as ink.
 6. **Compute indentation.** Each row's left edge, relative to the leftmost row, is divided by the character width and rounded to whole columns. The smallest non-zero indent is taken as the indent step, and every indent is snapped to a multiple of it. This absorbs measurement error at deeper nesting levels.
 7. **Rebuild spacing within a row.** The gap between neighbouring boxes on one row becomes the matching number of spaces, so aligned comments keep their alignment.
 8. **Render.** Walk the slots top to bottom, keeping a stack of open brackets (`{`, `(`, `[`):
-   - A text row ending in ` 1`, ` I`, ` l` or ` |` that is followed by a more-indented row gets that character replaced by `{`. This is Vision's most common brace misread.
+   - A text row ending in ` 1`, ` I`, ` l`, ` |`, ` f` or ` t` that is followed by a more-indented row gets that character replaced by `{`. These are Vision's common brace misreads.
+   - A lone `8`, `)` or `]` while the innermost open bracket is `{` becomes `}`.
+   - A `'`-quoted string containing `${` gets backticks (a template literal), and `|l`, `l|`, `|I` or `I|` between spaces becomes `||`.
    - On a row with more `[` than `]`, an `l` right after `[name` and before `;`, `.`, `)`, `,` or the line end becomes `]` (`item[keyl;` → `item[key];`).
    - A `(` or `[` still open in the middle of a row is treated as a misread and dropped from the stack. Only `{` and an opener at the very end of a row (a multi-line call or literal) stay open, so one misread can't change which closers are restored further down.
    - An `.ink` row becomes the closer for the innermost open bracket, at its measured indent.
@@ -134,4 +136,5 @@ Deliberate simplifications are marked in the source with `ponytail:` comments. E
 - **Runs of spaces inside one Vision box** collapse to a single space, for example two spaces before an inline comment.
 - **Line numbers** are removed only when they form a right-aligned column of increasing numbers on at least half the rows. Left-aligned or sparse gutters are kept.
 - **Docstrings:** only a lone `"""` right after a `def` or `class` line is restored; other lone quotes come back as blank lines.
-- **Character misreads** Vision makes (`L` read as `l`, a missing space before `_`) are not corrected. They're the largest remaining error source on the benchmark.
+- **Character misreads** Vision makes (dropped `=` and `_`, `L` read as `l`) are not corrected. They're the largest remaining error source on the benchmark.
+- **Spacing inside a line** comes from Vision's text, which sometimes adds a space before `(` or collapses runs of spaces. Rebuilding it from Vision's word positions was tried and made results worse (see [Evaluation](evaluation.md#how-squint-got-here)).

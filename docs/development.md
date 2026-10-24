@@ -55,11 +55,13 @@ The menu bar shows a monochrome version of the logo: an eye with `</>` inside a 
 
 ## Testing
 
-24 tests in 5 suites, written with Swift Testing. CI runs them on every push ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), together with a build and a signed bundle.
+37 tests in 7 suites, written with Swift Testing. CI runs them on every push ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), together with a build and a signed bundle.
 
 | Suite | Covers |
 |---|---|
 | `RecognizerTests` | Indent snapping; restoring brackets and docstring quotes Vision skipped; `{` and `]` misreads; a misread can't change later closers; line-number gutter removal, and code that merely starts with numbers is left alone; missing vs unreadable files; reading a QR code; metrics |
+| `CaptureModelTests` | **End-to-end journeys** through Vision and the code-layout pass, with a rendered screenshot in place of the selection overlay and a private pasteboard: capture, cancel, missing permission (the overlay never opens), a second press while busy, clipboard images, an empty clipboard, `squint://` routing |
+| `AppIntentsMetadataTests` | The committed `Metadata.appintents` lists exactly the intents in `Sources/Squint/App/Intents` |
 | `ShortcutTests` | Recording a shortcut from a key press, rejecting plain keys, named keys, display order, encoding |
 | `PreferencesTests` | Defaults for new users; every setting survives a relaunch |
 | `LinkCommandTests` | `squint://` link parsing, including case and unknown links |
@@ -67,7 +69,7 @@ The menu bar shows a monochrome version of the logo: an eye with `</>` inside a 
 
 The first test that calls Vision in a fresh process can take about 25 seconds while macOS compiles the model. Later runs take milliseconds.
 
-Not covered by automated tests: the capture flow itself (it needs the system selection UI and Screen Recording permission), the Settings window, and Spotlight. Check those by hand before a release.
+Not covered by automated tests: the system's own selection overlay and Screen Recording prompt, App Intents running inside Spotlight (the framework won't resolve their dependencies outside its own perform flow), and clicking through the Settings window. Check those by hand before a release.
 
 For end-to-end accuracy, use `squint eval` on a benchmark folder; see [Evaluation](evaluation.md).
 

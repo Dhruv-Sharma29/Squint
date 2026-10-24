@@ -121,7 +121,7 @@ The exit status is `0` on success and `1` on error, with the error message on st
 ## Tips for best results
 
 - **Start the selection at the code's left margin.** Indentation is measured from the leftmost line in the selection. If you select only a deeply nested block, it comes out with that block at column 0.
-- **Bigger is better.** Zoom in on small text before capturing, especially in videos. On the benchmark, errors roughly doubled from a Retina screenshot to a paused 720p video.
+- **Bigger is better.** Zoom in on small text before capturing. On the benchmark, errors rose from 2.9% on Retina screenshots to 3.6% on paused 720p video, and tiny or heavily blurred text fares worse.
 - **Include whole lines.** A partially selected line at the bottom edge can be mistaken for a missing closing bracket.
 - **Monospaced fonts work best.** Indentation and spacing are reconstructed from character width, which assumes monospaced text.
 - **Check before running.** Squint gets most lines exactly right, but on the benchmark most captures still needed a small fix, usually one misread character. See [Evaluation](evaluation.md).

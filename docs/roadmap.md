@@ -10,10 +10,10 @@ The order is deliberate. **Measure first** (Phase 0), add the small expected fea
 |---|---|
 | 0: Benchmark | **Done.** 40 real-code screenshots plus a renamed-identifier copy, five systems. See [Evaluation](evaluation.md). |
 | 1: Expected features | **Mostly done.** Settings, custom shortcut, open at login, Plain Mode language and Spotlight/Shortcuts actions shipped. A custom word list and hiding the menu bar icon are open. |
-| 2: Code accuracy | **Item 1 done** (line numbers): test-set error rate 7.1% → 4.1%. Items 2–7 open. |
+| 2: Code accuracy | **Items 1 and 1b partly done** (line numbers, code-only misreads): test-set error rate 7.1% → 3.2%; fresh held-out set 2.4%. Items 2–7 open. |
 | 3, 4 | CI is done; the rest is open. |
 
-**What the benchmark changed:** an AI chat assistant transcribed every test image perfectly, so Squint can't claim to be the most accurate option overall. Its case is the most accurate *on-device* option, about 4× fewer errors than the OCR built into macOS, at 0.13 s per capture, free and private. The plan below reflects that.
+**What the benchmark changed:** an AI chat assistant transcribed every test image perfectly, so Squint can't claim to be the most accurate option overall. Its case is the most accurate *on-device* option, 4.6–8× fewer errors than the OCR built into macOS, at 0.13 s per capture, free and private. The plan below reflects that.
 
 - [Status](#status-october-2026)
 - [Where Squint stands](#where-squint-stands)
@@ -101,8 +101,9 @@ This is where Squint wins. Work in order of measured impact: re-rank this list u
 
 | # | Improvement | Why it matters |
 |---|---|---|
-| ~~1~~ | ~~**Remove line-number gutters**~~ | **Done.** Line-numbered images went from 13.9% to 6.1% character errors on the test set. |
-| 1b | **Fix common character misreads** (`L`/`l`, a missing space before `_`) with code-aware rules | Now the largest remaining error source |
+| ~~1~~ | ~~**Remove line-number gutters**~~ | **Done.** Line-numbered test images went from 13.9% to 4.1% character errors, including gutters where Vision reads only two numbers. |
+| 1b | **Fix code-only misreads** | **Partly done:** `{` read as `f`/`t`, lone `}` read as `8`/`)`/`]`, template-literal backticks, `\|\|`. Still open: dropped `=` and `_`, `L`/`l`. These are now the largest error source. |
+| ~~2a~~ | ~~Rebuild spacing from Vision's word boxes~~ | **Tried and reverted:** dev-set errors rose from 4.1% to 12.5%; Vision's word boxes are too approximate. Needs pixel-level gap detection instead. |
 | 2 | **Character-level spacing**: split Vision boxes at spaces with `VNRecognizedText.boundingBox(for:)` | Keeps aligned comments and runs of spaces, the one error left in the smoke test |
 | 3 | **Bracket repair that understands code**: ignore brackets in strings and comments; restore `});`, `})` and `]);` in the order they were opened | Removes today's biggest known limitation |
 | 4 | **Detect the language** (Python, JavaScript, Swift, Java, C-family) from keywords and syntax | Enables language-specific repair, such as no braces in Python and checking semicolons in C-family code |
@@ -141,16 +142,16 @@ This is where Squint wins. Work in order of measured impact: re-rank this list u
 
 ## Success metrics
 
-Measured on the 40-image test set (rendered screenshots), October 2026.
+Measured on the 40-image test set (rendered screenshots) with Squint 0.2.0, October 2026.
 
 | Metric | Target | Now | Met? |
 |---|---|---|---|
-| Character error rate | At most **half** of the better of TextSniper and TRex | 4.1% vs TRex 18.6% (TextSniper not measurable) | ✓ for TRex |
-| Lines exact | At least **20 points** above the better competitor | 56% vs TRex 2% | ✓ |
-| Parse rate for complete snippets | **90% or higher** | 10% (4 of 40) | ✗ — the main open problem |
+| Character error rate | At most **half** of the better of TextSniper and TRex | 3.2% vs TRex 18.6% (TextSniper not measurable) | ✓ for TRex |
+| Lines exact | At least **20 points** above the better competitor | 61% vs TRex 2% | ✓ |
+| Parse rate for complete snippets | **90% or higher** | 12% (5 of 40); 36% on the fresh held-out set | ✗ — the main open problem |
 | Selection-to-clipboard time | **Under 1 s** at the 95th percentile | 0.15 s (recognition, CLI) | ✓ |
 | User check | **4 of 5** users paste and run a snippet without editing it | Not run yet | — |
-| Regressions | None on existing benchmark images | Images without line numbers unchanged at 2.9% | ✓ |
+| Regressions | None on existing benchmark images | One round regressed two renamed-set images; fixed and re-measured on a fresh held-out set | ✓ |
 
 ## Risks
 
