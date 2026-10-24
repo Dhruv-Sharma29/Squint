@@ -5,5 +5,6 @@ let arguments = Array(CommandLine.arguments.dropFirst())
 if arguments.isEmpty {
     SquintApp.main()
 } else {
-    exit(CLI.run(arguments))
+    Task { exit(await CLI.run(arguments)) }
+    dispatchMain()
 }

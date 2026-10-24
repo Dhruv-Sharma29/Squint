@@ -146,25 +146,40 @@ struct RecognizerTests {
         #expect(Recognizer.removingLineNumbers(fewNumbers).rows.count == 6)
     }
 
-    @Test func readsQRCode() throws {
+    @Test func readsQRCode() async throws {
         let filter = CIFilter.qrCodeGenerator()
         filter.message = Data("https://example.com/squint".utf8)
         let qr = try #require(filter.outputImage?.transformed(by: .init(scaleX: 10, y: 10)))
         let url = URL.temporaryDirectory.appending(path: "squint-test-qr.png")
         try CIContext().writePNGRepresentation(of: qr, to: url, format: .RGBA8, colorSpace: CGColorSpaceCreateDeviceRGB())
         defer { try? FileManager.default.removeItem(at: url) }
-        #expect(try Recognizer.text(at: url, code: true) == "https://example.com/squint")
+        #expect(try await Recognizer.text(at: url, code: true) == "https://example.com/squint")
     }
 
-    @Test func reportsMissingAndUnreadableFilesDistinctly() throws {
+    /// Vision blocks its calling thread while its own work runs on Swift's thread pool. Before recognition moved to
+    /// its own queue, as many images at once as the pool has threads deadlocked; on a three-core CI runner, three did.
+    @Test func recognizesMoreImagesAtOnceThanThePoolHasThreads() async throws {
+        let url = try CodeImage.write("let answer = 42")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let count = ProcessInfo.processInfo.activeProcessorCount + 2
+        let texts = try await withThrowingTaskGroup(of: String.self) { group in
+            for _ in 0..<count {
+                group.addTask { try await Recognizer.text(at: url, code: true) }
+            }
+            return try await group.reduce(into: []) { $0.append($1) }
+        }
+        #expect(texts == Array(repeating: "let answer = 42", count: count))
+    }
+
+    @Test func reportsMissingAndUnreadableFilesDistinctly() async throws {
         let missing = URL.temporaryDirectory.appending(path: "squint-missing-\(UUID().uuidString).png")
-        let missingError = #expect(throws: CocoaError.self) { try Recognizer.text(at: missing, code: true) }
+        let missingError = await #expect(throws: CocoaError.self) { try await Recognizer.text(at: missing, code: true) }
         #expect(missingError?.code == .fileReadNoSuchFile)
 
         let notAnImage = URL.temporaryDirectory.appending(path: "squint-text-\(UUID().uuidString).png")
         try Data("not an image".utf8).write(to: notAnImage)
         defer { try? FileManager.default.removeItem(at: notAnImage) }
-        let formatError = #expect(throws: CocoaError.self) { try Recognizer.text(at: notAnImage, code: true) }
+        let formatError = await #expect(throws: CocoaError.self) { try await Recognizer.text(at: notAnImage, code: true) }
         #expect(formatError?.code == .fileReadCorruptFile)
     }
 

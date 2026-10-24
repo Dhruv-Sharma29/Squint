@@ -7,7 +7,7 @@ enum CLI {
                squint eval <directory>      score each x.png against x.txt (and x.textsniper.txt if present)
         """
 
-    static func run(_ arguments: [String]) -> Int32 {
+    static func run(_ arguments: [String]) async -> Int32 {
         let rest = arguments.filter { $0 != "--plain" }
         guard let first = rest.first, !["-h", "--help", "help"].contains(first) else {
             print(usage)
@@ -15,9 +15,9 @@ enum CLI {
         }
         do {
             if first == "eval" {
-                try evaluate(URL(filePath: rest.dropFirst().first ?? "."))
+                try await evaluate(URL(filePath: rest.dropFirst().first ?? "."))
             } else {
-                print(try Recognizer.text(at: URL(filePath: first), code: !arguments.contains("--plain")))
+                print(try await Recognizer.text(at: URL(filePath: first), code: !arguments.contains("--plain")))
             }
             return 0
         } catch {
@@ -26,7 +26,7 @@ enum CLI {
         }
     }
 
-    private static func evaluate(_ directory: URL) throws {
+    private static func evaluate(_ directory: URL) async throws {
         let images = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
             .filter { ["png", "jpg", "jpeg"].contains($0.pathExtension.lowercased()) }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
@@ -37,8 +37,8 @@ enum CLI {
             let stem = image.deletingPathExtension()
             guard let truth = try? read(stem.appendingPathExtension("txt")) else { continue }
             var outputs = [
-                "plain": try Recognizer.text(at: image, code: false),
-                "squint": try Recognizer.text(at: image, code: true),
+                "plain": try await Recognizer.text(at: image, code: false),
+                "squint": try await Recognizer.text(at: image, code: true),
             ]
             outputs["textsniper"] = try? read(stem.appendingPathExtension("textsniper.txt"))
 

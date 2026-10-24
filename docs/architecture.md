@@ -110,7 +110,7 @@ Vision returns a list of text boxes. Each box is one recognized string with a bo
 The package compiles in Swift 6 language mode with strict concurrency checking.
 
 - `CaptureModel` is `@MainActor @Observable`. The UI reads it directly.
-- Recognition runs in a `nonisolated async` function, so Vision's synchronous work happens off the main actor.
+- Recognition runs one image at a time on `Recognizer`'s own serial queue, and callers await it through a continuation. Vision's `perform` blocks its thread while Vision's own work runs on Swift's cooperative thread pool. Called from that pool with as many images at once as it has threads, every thread blocks and nothing is left to run Vision's work: a deadlock, which hit CI's three-core runners. `recognizesMoreImagesAtOnceThanThePoolHasThreads` guards it.
 - `ScreenCapture` waits for `screencapture` through a continuation resumed by the process's termination handler, so no thread is blocked during the selection.
 - The Carbon hotkey callback runs on the main thread and enters the main actor with `MainActor.assumeIsolated`.
 

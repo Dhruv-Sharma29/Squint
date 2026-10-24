@@ -9,8 +9,20 @@ enum Recognizer {
     /// Vision language codes this Mac can recognize, for the Plain Mode language setting.
     static let supportedLanguages: [String] = (try? VNRecognizeTextRequest().supportedRecognitionLanguages()) ?? []
 
+    /// Vision's `perform` blocks its thread while Vision's own work runs on Swift's cooperative thread pool. Called from
+    /// that pool with as many images at once as it has threads (one per core: three on a CI runner), every thread
+    /// blocks and nothing is left to run Vision's work. So images are recognized one at a time on this queue, and
+    /// callers wait without holding a pool thread.
+    private static let vision = DispatchQueue(label: "Squint.Recognizer", qos: .userInitiated)
+
     /// - Parameter language: Plain Mode only; a Vision language code, or nil to detect the language automatically.
-    static func text(at url: URL, code: Bool, language: String? = nil) throws -> String {
+    static func text(at url: URL, code: Bool, language: String? = nil) async throws -> String {
+        try await withCheckedThrowingContinuation { continuation in
+            vision.async { continuation.resume(with: Result { try recognize(url, code: code, language: language) }) }
+        }
+    }
+
+    private static func recognize(_ url: URL, code: Bool, language: String?) throws -> String {
         guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else {
             throw CocoaError(.fileReadNoSuchFile, userInfo: [NSFilePathErrorKey: url.path(percentEncoded: false)])
         }

@@ -190,6 +190,6 @@ final class CaptureModel {
     /// Plain `nonisolated async` rather than `@concurrent` keeps the package buildable with Swift 6.0 (Xcode 16 on macOS 14).
     private nonisolated static func read(_ url: URL, code: Bool, language: String?) async throws -> String {
         defer { try? FileManager.default.removeItem(at: url) }
-        return try Recognizer.text(at: url, code: code, language: language)
+        return try await Recognizer.text(at: url, code: code, language: language)
     }
 }
