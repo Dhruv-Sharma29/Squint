@@ -3,7 +3,12 @@ import SwiftUI
 struct SettingsView: View {
     var model: CaptureModel
     /// macOS applies a new grant only after relaunch, so this is re-read whenever Squint becomes active.
-    @State private var screenRecordingAllowed = CGPreflightScreenCaptureAccess()
+    @State private var screenRecordingAllowed: Bool
+
+    init(model: CaptureModel, screenRecordingAllowed: Bool = CGPreflightScreenCaptureAccess()) {
+        self.model = model
+        _screenRecordingAllowed = State(initialValue: screenRecordingAllowed)
+    }
 
     private static let website = URL(string: "https://dhruv-sharma29.github.io/Squint/")
     private var subtitle: String {
