@@ -3,6 +3,7 @@ import Foundation
 import Testing
 @testable import Squint
 
+@Suite(.timeLimit(.minutes(1)))
 struct RecognizerTests {
     @Test func indentsSnapToSmallestStep() {
         let charWidth = 0.01

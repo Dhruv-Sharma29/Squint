@@ -176,9 +176,11 @@ final class CaptureModel {
         announce(message)
     }
 
-    /// VoiceOver feedback: the menu bar icon change alone isn't perceivable without sight.
+    /// VoiceOver feedback: the menu bar icon change alone isn't perceivable without sight. Skipped when Squint isn't
+    /// running as an app (tests, the CLI): creating the app object there can block on a headless Mac.
     private func announce(_ message: String) {
-        NSAccessibility.post(element: NSApplication.shared, notification: .announcementRequested, userInfo: [
+        guard let app = NSApp else { return }
+        NSAccessibility.post(element: app, notification: .announcementRequested, userInfo: [
             .announcement: message,
             .priority: NSAccessibilityPriorityLevel.high.rawValue,
         ])

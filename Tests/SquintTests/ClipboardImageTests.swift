@@ -5,6 +5,7 @@ import Testing
 @testable import Squint
 
 /// Uses a private pasteboard, so running the tests never touches the real clipboard.
+@Suite(.timeLimit(.minutes(1)))
 struct ClipboardImageTests {
     private let pasteboard = NSPasteboard(name: NSPasteboard.Name("squint-tests-\(UUID().uuidString)"))
 

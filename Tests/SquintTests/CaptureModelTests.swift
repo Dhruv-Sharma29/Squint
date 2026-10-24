@@ -6,6 +6,7 @@ import Testing
 /// The capture → recognize → copy journeys, end to end through Vision and the code-layout pass. Only the system's
 /// selection overlay is replaced (by a rendered screenshot), and a private pasteboard stands in for the clipboard.
 @MainActor
+@Suite(.timeLimit(.minutes(1)))
 struct CaptureModelTests {
     static let code = """
         function sum(arr) {

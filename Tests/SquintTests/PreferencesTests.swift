@@ -4,6 +4,7 @@ import Testing
 @testable import Squint
 
 @MainActor
+@Suite(.timeLimit(.minutes(1)))
 struct PreferencesTests {
     private let suite = "squint-tests-\(UUID().uuidString)"
 

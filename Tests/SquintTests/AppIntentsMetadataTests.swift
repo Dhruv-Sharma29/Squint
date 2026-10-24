@@ -3,6 +3,7 @@ import Testing
 
 /// Spotlight, Siri and Shortcuts read `Assets/Metadata.appintents`, which is generated and committed. This fails when
 /// intents change without re-running `scripts/app-intents-metadata.sh`, so Spotlight never shows stale actions.
+@Suite(.timeLimit(.minutes(1)))
 struct AppIntentsMetadataTests {
     private let intents = ["CaptureCodeIntent", "CapturePlainTextIntent", "CaptureTextIntent", "ReadClipboardImageIntent"]
 

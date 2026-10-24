@@ -5,6 +5,7 @@ import SwiftUI
 import Testing
 @testable import Squint
 
+@Suite(.timeLimit(.minutes(1)))
 struct ShortcutTests {
     private func keyDown(_ characters: String, keyCode: Int, flags: NSEvent.ModifierFlags) throws -> NSEvent {
         try #require(NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: flags, timestamp: 0, windowNumber: 0,

@@ -12,6 +12,7 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: macos-15
+    timeout-minutes: 20 # a hung test fails the job instead of running for hours
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 

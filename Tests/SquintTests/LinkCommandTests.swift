@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import Squint
 
+@Suite(.timeLimit(.minutes(1)))
 struct LinkCommandTests {
     private func command(_ link: String) throws -> LinkCommand? {
         LinkCommand(try #require(URL(string: link)))
