@@ -1,5 +1,7 @@
+import AppKit
 import CoreImage.CIFilterBuiltins
 import Foundation
+import ImageIO
 import Testing
 @testable import Squint
 
@@ -178,6 +180,21 @@ struct RecognizerTests {
         let url = try CodeImage.write(code)
         defer { try? FileManager.default.removeItem(at: url) }
         #expect(try await Recognizer.text(at: url, code: true) == code)
+    }
+
+    /// Vision collapses runs of spaces; in monospaced code their width comes back from the pixels.
+    @Test func restoresRunsOfSpacesFromThePixels() throws {
+        let url = try CodeImage.write("let x = 1;  // one   two")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let source = try #require(CGImageSourceCreateWithURL(url as CFURL, nil))
+        let image = try #require(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        let ink = try #require(InkMap(image))
+        let width = "M".size(withAttributes: [.font: NSFont.monospacedSystemFont(ofSize: 26, weight: .regular)]).width
+        let rect = CGRect(x: 0, y: 0, width: 1, height: 1)
+        let read = "let x = 1; // one two" // as Vision reads it
+        #expect(Spacing.restoringRuns(read, rect: rect, ink: ink, charWidth: width / Double(image.width)) == "let x = 1;  // one   two")
+        // A different number of gaps than runs of spaces: left as read.
+        #expect(Spacing.restoringRuns("letx = 1; // one two", rect: rect, ink: ink, charWidth: width / Double(image.width)) == "letx = 1; // one two")
     }
 
     @Test func readsALineOfOnlyEmoji() async throws {

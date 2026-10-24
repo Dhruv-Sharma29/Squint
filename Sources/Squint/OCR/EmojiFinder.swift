@@ -22,7 +22,7 @@ enum EmojiFinder {
     /// looks like an emoji.
     static func find(in ink: InkMap, letters: () -> [CGRect]) -> [Match] {
         let w = ink.width, h = ink.height, px = ink.pixels
-        let bg = background(ink)
+        let bg = ink.background
         func differs(_ i: Int) -> Bool { abs(Int(px[i]) - bg.0) + abs(Int(px[i + 1]) - bg.1) + abs(Int(px[i + 2]) - bg.2) > 64 }
         var mask = [Bool](repeating: false, count: w * h)
         for i in mask.indices { mask[i] = differs(i * 4) }
@@ -75,7 +75,7 @@ enum EmojiFinder {
             data: nil, width: image.width, height: image.height, bitsPerComponent: 8, bytesPerRow: 0,
             space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else { return nil }
-        let bg = background(ink)
+        let bg = ink.background
         let height = Double(image.height)
         context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
         let light = bg.0 + bg.1 + bg.2 > 384
@@ -326,19 +326,5 @@ enum EmojiFinder {
     private static func pixel(_ ink: InkMap, _ x: Int, _ y: Int) -> RGB {
         let i = (y * ink.width + x) * 4
         return (Int(ink.pixels[i]), Int(ink.pixels[i + 1]), Int(ink.pixels[i + 2]))
-    }
-
-    /// The most common colour around the image's edge (averaged within its group of near-identical colours).
-    private static func background(_ ink: InkMap) -> RGB {
-        var groups: [Int: (count: Int, sum: RGB)] = [:]
-        func add(_ x: Int, _ y: Int) {
-            let c = pixel(ink, x, y)
-            let group = groups[(c.0 / 8) << 10 | (c.1 / 8) << 5 | c.2 / 8, default: (0, (0, 0, 0))]
-            groups[(c.0 / 8) << 10 | (c.1 / 8) << 5 | c.2 / 8] = (group.count + 1, (group.sum.0 + c.0, group.sum.1 + c.1, group.sum.2 + c.2))
-        }
-        for x in 0..<ink.width { add(x, 0); add(x, ink.height - 1) }
-        for y in 0..<ink.height { add(0, y); add(ink.width - 1, y) }
-        guard let top = groups.values.max(by: { $0.count < $1.count }) else { return (255, 255, 255) }
-        return (top.sum.0 / top.count, top.sum.1 / top.count, top.sum.2 / top.count)
     }
 }

@@ -65,6 +65,12 @@ enum Recognizer {
                                                                   width: rect.width / size.width, height: rect.height / size.height))
         }
 
+        if code, let ink {
+            // Runs of spaces Vision collapsed, from the gaps in the pixels (monospaced code only).
+            let long = boxes.filter { $0.text.count >= 4 }
+            let charWidth = median((long.isEmpty ? boxes : long).map { $0.rect.width / Double($0.text.count) })
+            boxes = boxes.map { TextBox(text: Spacing.restoringRuns($0.text, rect: $0.rect, ink: ink, charWidth: charWidth), rect: $0.rect) }
+        }
         let rows = group(boxes)
         guard code else { return rows.map { $0.map(\.text).joined(separator: " ") }.joined(separator: "\n") }
         // Line spacing comes from every row, line numbers included: once the gutter is removed, rows that held only a

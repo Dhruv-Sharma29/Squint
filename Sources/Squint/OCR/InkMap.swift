@@ -41,6 +41,22 @@ struct InkMap {
         return nil
     }
 
+    /// The most common colour around the image's edge, averaged within its group of near-identical colours.
+    var background: (Int, Int, Int) {
+        var groups: [Int: (count: Int, sum: (Int, Int, Int))] = [:]
+        func add(_ x: Int, _ y: Int) {
+            let i = (y * width + x) * 4
+            let c = (Int(pixels[i]), Int(pixels[i + 1]), Int(pixels[i + 2]))
+            let key = (c.0 / 8) << 10 | (c.1 / 8) << 5 | c.2 / 8
+            let group = groups[key, default: (0, (0, 0, 0))]
+            groups[key] = (group.count + 1, (group.sum.0 + c.0, group.sum.1 + c.1, group.sum.2 + c.2))
+        }
+        for x in 0..<width { add(x, 0); add(x, height - 1) }
+        for y in 0..<height { add(0, y); add(width - 1, y) }
+        guard let top = groups.values.max(by: { $0.count < $1.count }) else { return (255, 255, 255) }
+        return (top.sum.0 / top.count, top.sum.1 / top.count, top.sum.2 / top.count)
+    }
+
     private func isInk(_ x: Int, _ y: Int) -> Bool {
         let offset = (y * width + x) * 4
         return (0..<3).contains { abs(Int(pixels[offset + $0]) - Int(pixels[$0])) > 64 }
