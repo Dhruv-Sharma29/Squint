@@ -68,7 +68,7 @@ enum ParseRepair {
             if language == .braces, text.wholeMatch(of: /\s*[A-Za-z][\w,.']*(\s+[\w,.']+){2,}\s*/) != nil {
                 // A comment whose `//` Vision dropped: prose where code should be.
                 let indent = text.prefix { $0 == " " }
-                with(index, indent + "// " + text.dropFirst(indent.count))
+                with(index, String(indent) + "// " + String(text.dropFirst(indent.count)))
             }
             if language == .python {
                 // `.` read as a space between a name or `)` and a call (`self.buffer append(x)`, `super() seekable()`).
@@ -77,10 +77,10 @@ enum ParseRepair {
                     with(index, text.replacingCharacters(in: match.range, with: "\(match.output.1).\(match.output.2)("))
                 }
                 // `()` read as `Q`, `0` or `O` in a definition (`def resumeQ:`).
-                if let match = text.firstMatch(of: /^(\s*def\s+\w+?)[QO0]:\s*$/) { with(index, match.output.1 + "():") }
+                if let match = text.firstMatch(of: /^(\s*def\s+\w+?)[QO0]:\s*$/) { with(index, String(match.output.1) + "():") }
                 // A docstring's `"""` read as another mix of quotes (`'''"`).
-                if let quotes = text.firstMatch(of: /^(\s*)['"]{3,4}/) { with(index, quotes.output.1 + "\"\"\"" + text[quotes.range.upperBound...]) }
-                if let quotes = text.firstMatch(of: /['"]{3,4}$/) { with(index, text[..<quotes.range.lowerBound] + "\"\"\"") }
+                if let quotes = text.firstMatch(of: /^(\s*)['"]{3,4}/) { with(index, String(quotes.output.1) + "\"\"\"" + String(text[quotes.range.upperBound...])) }
+                if let quotes = text.firstMatch(of: /['"]{3,4}$/) { with(index, String(text[..<quotes.range.lowerBound]) + "\"\"\"") }
                 // A block statement without its `:`.
                 if text.firstMatch(of: /^\s*(def|class|if|elif|else|for|while|with|try|except|finally)\b[^:]*$/) != nil { with(index, text + ":") }
             }
@@ -101,7 +101,7 @@ enum ParseRepair {
                     .replacing(/(\S)['"]{3,4}$/) { "\($0.output.1)\"\"\"" }
                 if i > 0, fixed[i - 1].firstMatch(of: /^\s*(async\s+)?(def|class)\b.*:\s*$/) != nil,
                    let lone = fixed[i].firstMatch(of: /^(\s*)"\s?(?=\w)/) {
-                    fixed[i].replaceSubrange(lone.range, with: lone.output.1 + "\"\"\"")
+                    fixed[i].replaceSubrange(lone.range, with: String(lone.output.1) + "\"\"\"")
                 }
             }
             if fixed != lines { out.append(fixed.joined(separator: "\n")) }

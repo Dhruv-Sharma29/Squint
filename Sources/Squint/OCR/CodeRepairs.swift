@@ -130,7 +130,7 @@ enum CodeRepairs {
                 quote = character
                 stringStart = index
             } else if (language != .braces && character == "#") || (language != .python && line[index...].hasPrefix("//")) {
-                return out + transform(code) + line[index...]
+                return out + transform(code) + String(line[index...])
             } else {
                 code.append(character)
             }
