@@ -51,6 +51,19 @@ python3 bench/score.py bench/data-novel
 
 `SQUINT_BINARY` measures a specific build instead of `.build/release/Squint`.
 
+## Hindi and English
+
+[`hindi/sentences.tsv`](hindi/sentences.tsv) has 18 everyday sentences, six each in Devanagari, Devanagari mixed with English words, and Hinglish (Hindi in Latin letters). [`hindi/Render.swift`](hindi/Render.swift) draws them at 18 pt on a Retina display and at 14 pt:
+
+```sh
+swiftc -O bench/hindi/Render.swift -o /tmp/render-hindi && /tmp/render-hindi bench/hindi/sentences.tsv bench/data-hindi
+squint eval bench/data-hindi                   # Plain Mode, detected language
+squint eval bench/data-hindi --also hi-IN      # detected, plus Hindi when detection is unsure
+squint eval bench/data-hindi --language hi-IN  # Hindi only
+```
+
+Results are in [Evaluation](../docs/evaluation.md#hindi-and-english).
+
 ## Rules
 
 - **Never tune on the test sets.** Develop against `data-dev`, run `data` and `data-novel` to report, and keep `data-holdout` for final numbers.

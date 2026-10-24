@@ -97,6 +97,22 @@ Squint beat Apple Vision and Live Text on 21 of 22 images and TRex on all 22 (p 
 
 Per-image scores: [`bench/results-data.csv`](../bench/results-data.csv), [`results-data-novel.csv`](../bench/results-data-novel.csv), [`results-data-holdout.csv`](../bench/results-data-holdout.csv) and [`results-data-dev.csv`](../bench/results-data-dev.csv).
 
+## Hindi and English
+
+Plain Mode on 18 sentences rendered at two sizes (36 images; [`bench/hindi`](../bench/README.md#hindi-and-english)), character error rate:
+
+| Plain Mode language | Devanagari | Devanagari with English words | Hinglish (Latin letters) |
+|---|---|---|---|
+| Detected (the default) | 0% | 10.0% | 0% |
+| Hindi | 0% | 0% | 76.7%: written out in Devanagari |
+| English | 100%: unreadable | 44.0% | 0% |
+| Hindi and English, either order | as the first language | | |
+| **Detected, plus Hindi when unsure** | **0%** | **2.9%** | **0%** |
+
+Detection picks English for a line that is mostly English words and drops the Devanagari (`आज का standup cancel है।` came back as `stand cancel`). Squint now reads such a line in Hindi as well and keeps the reading Vision is more confident in, whenever someone has Hindi, or another language Vision reads, in System Settings › General › Language & Region. On a Mac with only English there, nothing changes.
+
+**Limits.** Rendered lines in the system font, black on white; real screenshots, handwriting and other Indian languages weren't measured.
+
 ## Emoji
 
 Vision can't read emoji. It skips them or reads `:` or `*`, and it can drop the text after one: `console.log("done ✅")` came back as `console.log("done`. Squint finds glyph-sized, shaded or colourful blobs, compares each with all 1,436 emoji in Apple Color Emoji, and keeps only close matches that no other emoji comes near. It then draws `##` over each emoji, lets Vision read the line again, and swaps the `##` back.

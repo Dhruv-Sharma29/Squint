@@ -16,13 +16,25 @@ enum Recognizer {
     private static let vision = DispatchQueue(label: "Squint.Recognizer", qos: .userInitiated)
 
     /// - Parameter language: Plain Mode only; a Vision language code, or nil to detect the language automatically.
-    static func text(at url: URL, code: Bool, language: String? = nil) async throws -> String {
+    /// - Parameter alsoTry: Plain Mode with automatic detection: a language to read in as well when the reading isn't
+    ///   fully confident, keeping the more confident one. By default, the first non-English language this Mac prefers.
+    static func text(at url: URL, code: Bool, language: String? = nil, alsoTry: String? = Recognizer.preferredAlternative) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
-            vision.async { continuation.resume(with: Result { try recognize(url, code: code, language: language) }) }
+            vision.async { continuation.resume(with: Result { try recognize(url, code: code, language: language, alsoTry: alsoTry) }) }
         }
     }
 
-    private static func recognize(_ url: URL, code: Bool, language: String?) throws -> String {
+    /// The first language in System Settings › Language & Region that Vision reads, other than English (`hi-IN` for
+    /// someone who reads Hindi). Detection picks English for a line that's mostly English words and drops the rest:
+    /// on rendered Hindi–English lines, reading in Hindi as well and keeping the more confident result cut errors on
+    /// mixed lines from 10% to 3%, with Devanagari and Hinglish lines still exact.
+    static let preferredAlternative: String? = Locale.preferredLanguages.lazy.compactMap { preferred -> String? in
+        let base = preferred.split(separator: "-").first.map(String.init) ?? preferred
+        guard base != "en" else { return nil }
+        return supportedLanguages.first { $0 == preferred } ?? supportedLanguages.first { $0.hasPrefix(base + "-") || $0 == base }
+    }.first
+
+    private static func recognize(_ url: URL, code: Bool, language: String?, alsoTry: String?) throws -> String {
         guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else {
             throw CocoaError(.fileReadNoSuchFile, userInfo: [NSFilePathErrorKey: url.path(percentEncoded: false)])
         }
@@ -39,6 +51,11 @@ enum Recognizer {
         if !payloads.isEmpty { return payloads.joined(separator: "\n") }
 
         var observations = request.results ?? []
+        if !code, language == nil, let alsoTry, confidence(observations) < 1 {
+            let again = textRequest(code: false, language: alsoTry)
+            try VNImageRequestHandler(cgImage: image).perform([again])
+            if confidence(again.results ?? []) > confidence(observations) { observations = again.results ?? [] }
+        }
         let ink = InkMap(image)
         let size = CGSize(width: image.width, height: image.height)
         let emoji = ink.map { EmojiFinder.find(in: $0, letters: { letterBoxes(observations, imageSize: size) }) } ?? []
@@ -94,6 +111,14 @@ enum Recognizer {
             else { return token }
             return word
         }
+    }
+
+    /// Vision's confidence in a reading, averaged over its characters.
+    private static func confidence(_ observations: [VNRecognizedTextObservation]) -> Double {
+        let candidates = observations.compactMap { $0.topCandidates(1).first }
+        let characters = candidates.map(\.string.count).reduce(0, +)
+        guard characters > 0 else { return 0 }
+        return candidates.map { Double($0.confidence) * Double($0.string.count) }.reduce(0, +) / Double(characters)
     }
 
     private static func textRequest(code: Bool, language: String?) -> VNRecognizeTextRequest {

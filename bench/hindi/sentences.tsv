@@ -1,0 +1,19 @@
+id	kind	text
+hi-01	devanagari	आज मौसम बहुत अच्छा है।
+hi-02	devanagari	मुझे किताबें पढ़ना पसंद है।
+hi-03	devanagari	हम कल दिल्ली जाएंगे।
+hi-04	devanagari	यह कोड ठीक से चल रहा है।
+hi-05	devanagari	कृपया दरवाज़ा बंद कर दीजिए।
+hi-06	devanagari	बच्चे बगीचे में खेल रहे हैं।
+mx-01	mixed	मेरा laptop बहुत slow है।
+mx-02	mixed	कल meeting 10 बजे है।
+mx-03	mixed	यह bug production में आया था।
+mx-04	mixed	Please अपना password बदल लीजिए।
+mx-05	mixed	हमने नया feature release किया।
+mx-06	mixed	आज का standup cancel है।
+hg-01	hinglish	Aaj ka plan kya hai?
+hg-02	hinglish	Main thodi der mein call karta hoon.
+hg-03	hinglish	Yeh code kaafi fast chal raha hai.
+hg-04	hinglish	Kal ki meeting postpone ho gayi.
+hg-05	hinglish	Bhai, deploy kab karna hai?
+hg-06	hinglish	Mujhe yeh bug samajh nahi aaya.
