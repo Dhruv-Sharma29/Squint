@@ -40,9 +40,7 @@ struct ClipboardImageTests {
         pasteboard.addTypes([.tiff], owner: nil)
         let icon = try #require(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 4, pixelsHigh: 4, bitsPerSample: 8, samplesPerPixel: 4,
                                                  hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
-        // Optional in some SDKs and not in others; widening it keeps #require warning-free on both.
-        let tiff: Data? = icon.tiffRepresentation
-        pasteboard.setData(try #require(tiff), forType: .tiff)
+        pasteboard.setData(icon.tiffRepresentation, forType: .tiff) // takes Data?, so this compiles cleanly on every SDK
 
         let copy = try #require(try ClipboardImage.file(from: pasteboard))
         defer { try? FileManager.default.removeItem(at: copy) }
