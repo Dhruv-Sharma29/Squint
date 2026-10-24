@@ -2,19 +2,33 @@
 
 All notable changes to Squint are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.0] - Unreleased
 
 ### Added
 
-- App icon in Apple's layered format, so macOS 26 and later show it in the native shape rather than inside a grey container. It appears in Finder, Spotlight, System Settings and permission prompts.
-- Menu bar icon based on the logo: an eye with `</>` inside a viewfinder, drawn as a template image that follows light and dark menu bars.
-- Product README with a demo GIF and a before/after comparison, both generated from real output by `scripts/ReadmeMedia`.
-- [Roadmap](docs/roadmap.md) with a feature comparison against TextSniper and TRex, a phased plan and success metrics.
+- **Settings window** (⌘, from the menu): record your own global shortcut, open at login, choose the Plain Mode recognition language, and play a sound when text is copied. All settings, including Code Mode, persist across launches.
+- **Spotlight, Siri and Shortcuts actions:** Capture Text, Capture Code, Capture Plain Text and Read Clipboard Image. Type "Squint" in Spotlight. In Shortcuts, each action returns the captured text.
+- **Editor line numbers are removed** in Code Mode, and lone docstring `"""` lines Vision skips are restored.
+- **VoiceOver announces** when text is copied and when a capture fails.
+- **Benchmark** ([`bench/`](bench/README.md)): 40 real-code screenshots plus a renamed-identifier copy, comparing Squint with Apple Vision, Live Text, TRex and an AI chat assistant. Results in [Evaluation](docs/evaluation.md).
+- **Continuous integration:** every push is built, tested and bundled on GitHub Actions.
+- App icon in Apple's layered format, so macOS 26 and later show it in the native shape rather than inside a grey container.
+- Menu bar icon based on the logo, drawn as a template image that follows light and dark menu bars.
+- Product README with a demo and a before/after comparison generated from real output.
+- [Roadmap](docs/roadmap.md) with status, a phased plan and success metrics.
+
+### Changed
+
+- Character error rate on the benchmark's test set fell from **7.1% to 4.1%** (renamed identifiers: 7.4% to 3.7%), mostly from line-number removal.
+- Code Mode's menu tick now lines up with the menu's icons.
+- The Screen Recording message says to reopen Squint, which macOS requires before a new permission takes effect.
 
 ### Fixed
 
-- `]` misread as `l` (for example `item[keyl;`) is repaired.
-- A misread bracket no longer changes which closing brackets are restored: lone `}` lines used to come back as `]`.
+- **Read Clipboard Image** read the *icon* of an image file copied in Finder instead of the image.
+- Pressing the shortcut twice quickly opened two selection overlays.
+- The Code Mode setting was forgotten on every launch.
+- `]` misread as `l` (for example `item[keyl;`) is repaired, and a misread bracket no longer turns restored `}` lines into `]`.
 
 ## [0.1.0] - 2026-10-24
 
