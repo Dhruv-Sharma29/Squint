@@ -200,9 +200,12 @@ enum Recognizer {
                     lines.append(padding + "\"\"\"")
                     inDocstring.toggle()
                 } else {
+                    // The closer for the innermost open bracket, lined up with the line that opened it. Measured ink
+                    // tends to sit too far right, and a misread opener can leave the wrong one open: the smaller wins.
+                    let opener = language == .unknown ? nil : openedAt.last.map { min($0, indent) }
                     let closer = open.popLast().flatMap { pairs[$0] }
                     openedAt = Array(openedAt.prefix(open.count))
-                    lines.append(closer.map { padding + String($0) } ?? "")
+                    lines.append(closer.map { (opener.map { String(repeating: " ", count: $0) } ?? padding) + String($0) } ?? "")
                 }
             case .text(var indent, var text):
                 let opensBlock = slots[(index + 1)...].lazy.compactMap(\.indent).first.map { $0 > indent } ?? false
@@ -211,7 +214,7 @@ enum Recognizer {
                 if language == .python, inDocstring || opensDocstring, CodeRepairs.isMisreadDocstringQuote(text) {
                     text = "\"\"\""
                 }
-                if opensBlock, let last = text.last, "1Il|ft".contains(last) || (language == .braces && last == "("), text.dropLast().hasSuffix(" ") {
+                if opensBlock, let last = text.last, "1Il|fti".contains(last) || (language == .braces && last == "("), text.dropLast().hasSuffix(" ") {
                     text = text.dropLast() + "{"
                 }
                 if language == .braces, !inDocstring {

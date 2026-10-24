@@ -15,7 +15,9 @@ enum CodeLanguage: Equatable {
             if text.contains("self.") || text.hasPrefix("import ") || text.hasPrefix("from ") || text.hasPrefix("#") { python += 1 }
             if text.contains(/\b(None|True|False|elif|lambda)\b/) { python += 1 }
             if text.hasSuffix("{") || text.hasPrefix("}") || text.hasSuffix(";") || text.hasPrefix("//") { braces += 2 }
-            if text.contains(/=>|===|!==|\b(const|let|var|function|func)\s/) { braces += 1 }
+            // Strong even in a few lines, and before any repair (`{` is often misread).
+            if text.contains(/=>|===|!==/) || text.firstMatch(of: /^(const|let|var|function|func|export)\b/) != nil { braces += 2 }
+            if text.contains(/\b(null|undefined|this)\b/) { braces += 1 }
         }
         if python >= 2, python > braces { return .python }
         if braces >= 2, braces > python { return .braces }
@@ -41,7 +43,20 @@ enum CodeRepairs {
 
     /// Only the parts of `line` outside strings and comments change: prose there has its own spacing and punctuation.
     static func repairing(_ line: String, language: CodeLanguage) -> String {
-        outsideStringsAndComments(line, language: language) { repairingCode($0, language: language) }
+        outsideStringsAndComments(repairingQuotes(line, language: language), language: language) { repairingCode($0, language: language) }
+    }
+
+    /// A string compared or passed whose opening `'` Vision read as `i` or dropped (`=== ipeer'`, `=== workspace'`).
+    /// Only on lines with an odd number of `'`, where a quote is surely missing.
+    static func repairingQuotes(_ line: String, language: CodeLanguage) -> String {
+        guard language != .unknown, line.count(where: { $0 == "'" }) % 2 == 1 else { return line }
+        if let match = line.firstMatch(of: /(={2,3}|!={1,2})\s?i(\w[\w-]*)'/) {
+            return line.replacingCharacters(in: match.range, with: "\(match.output.1) '\(match.output.2)'")
+        }
+        if let match = line.firstMatch(of: /(={2,3}|!={1,2})\s([A-Za-z][\w-]*)'/) {
+            return line.replacingCharacters(in: match.range, with: "\(match.output.1) '\(match.output.2)'")
+        }
+        return line
     }
 
     private static func repairingCode(_ line: String, language: CodeLanguage) -> String {
@@ -55,7 +70,8 @@ enum CodeRepairs {
         }
         line = line.replacing(/(^|[^\p{L}])ø(?![\p{L}])/) { "\($0.output.1)0" }.replacing("‹", with: "<").replacing("›", with: ">")
         // No space between a function's name and its `(` (`readPasswords ()`), except after keywords and `function name`.
-        line = line.replacing(/(\b[A-Za-z_][\w]*)\s+\((?=[^\s])/) { match in
+        // Simple word boundaries: Unicode's treat `log.warn` as one word.
+        line = line.replacing(/(\b[A-Za-z_][\w]*)\s+\((?!\s)/.wordBoundaryKind(.simple)) { match in
             let name = String(match.output.1)
             let before = line[..<match.range.lowerBound].split(separator: " ").last.map(String.init)
             return spacedBeforeParen.contains(name) || before == "function" ? String(match.output.0) : name + "("
@@ -69,8 +85,8 @@ enum CodeRepairs {
                 // `=>` read as `>`: after a parameter list that follows `(`, `=`, `,` or `:`, or a lone name in a call.
                 .replacing(/([(=,:]\s*|^\s*)(\([\w\s,{}\[\].]*\))\s>(?=\s|$)/) { "\($0.output.1)\($0.output.2) =>" }
                 .replacing(/(\.\w+\(\s*\w+)\s>\s/) { "\($0.output.1) => " }
-                // `({` read as `(t`, when the line closes the object it opens.
-                .replacing(/\(t\ (?=[^{}]*\ \}\))/, with: "({ ")
+                // `({` read as `(t`, when the line closes the object it opens or a key follows.
+                .replacing(/\(t\ (?=[^{}]*\ \}\)|\w+:\s)/, with: "({ ")
                 // `{ name )` closing a destructuring pattern.
                 .replacing(/\{\ ([\w,\ ]+)\ \)/) { "{ \($0.output.1) }" }
                 // `x. y` in a member access.
@@ -78,6 +94,11 @@ enum CodeRepairs {
             // `&` between conditions: `&&`, in lines that are clearly boolean.
             if line.contains(/^\s*(\}\s*)?(if|else if|while)\b|&&|\|\|/) {
                 line = line.replacing(/([\w)])\ &\ (?=[\w!(])/) { "\($0.output.1) && " }
+            }
+            // `[` read as `I` in a line with more `]` than `[` (`forEach((Ik, v]) =>`).
+            while line.count(where: { $0 == "]" }) > line.count(where: { $0 == "[" }),
+                  let match = line.firstMatch(of: /([(,]\s?)I(?=\w)/) {
+                line.replaceSubrange(match.range, with: "\(match.output.1)[")
             }
         case .python:
             // `def __name__(…):` read as `def__name__(…):`.

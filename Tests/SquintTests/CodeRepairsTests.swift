@@ -23,6 +23,11 @@ struct CodeRepairsTests {
         ("    return пра(spec)", "    return npa(spec)"),
         ("  if (customNames.length > ø) {", "  if (customNames.length > 0) {"),
         ("    return readPasswords ()", "    return readPasswords()"),
+        ("    log.warn ('profile', 'Passwords do not match')", "    log.warn('profile', 'Passwords do not match')"),
+        ("    : type === ipeer' ? chalk.magentaBright", "    : type === 'peer' ? chalk.magentaBright"),
+        ("    : type === workspace' ? chalk.blueBright", "    : type === 'workspace' ? chalk.blueBright"),
+        ("  return read(t prompt: msg, silent: true", "  return read({ prompt: msg, silent: true"),
+        ("    Object.entries(s).forEach((Ik, v]) => {", "    Object.entries(s).forEach(([k, v]) => {"),
     ])
     func repairsBraceLanguageMisreads(_ read: String, _ code: String) {
         #expect(CodeRepairs.repairing(read, language: .braces) == code)
