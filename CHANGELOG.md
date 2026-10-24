@@ -7,6 +7,7 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 ### Added
 
 - **Custom words** in Settings: names and terms Squint spells exactly, correcting words one letter off (`Flaxmers` → `Flaxmere`). Vision's own custom-word option made no difference in testing, so Squint applies the list itself.
+- **Copy as Markdown:** optionally copies code in a fenced block tagged with its language.
 - **Open links:** optionally opens the first web address in the copied text.
 - **Hide the menu bar icon:** opening Squint again shows Settings, to bring it back.
 

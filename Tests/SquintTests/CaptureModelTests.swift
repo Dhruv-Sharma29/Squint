@@ -65,6 +65,18 @@ struct CaptureModelTests {
         #expect(opened == [URL(string: "https://example.com/guide")])
     }
 
+    @Test func copiesCodeAsMarkdownWhenAsked() async throws {
+        defer { pasteboard.releaseGlobally() }
+        let model = try makeModel { try CodeImage.write(Self.code) }
+        model.preferences.copyAsMarkdown = true
+
+        let text = await model.capture()
+        #expect(text?.hasPrefix("```javascript\nfunction sum(arr) {") == true)
+        #expect(text?.hasSuffix("}\n```") == true)
+        #expect(pasteboard.string(forType: .string) == text)
+        #expect(await model.capture(code: false)?.hasPrefix("```") == false) // Plain Mode stays plain
+    }
+
     @Test func linksOtherThanWebAddressesNeverOpen() {
         #expect(CaptureModel.firstLink(in: "see file:///etc/passwd or mailto:a@b.co") == nil)
         #expect(CaptureModel.firstLink(in: "x file:///tmp then http://example.org/a") == URL(string: "http://example.org/a"))

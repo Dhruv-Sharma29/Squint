@@ -103,3 +103,25 @@ struct CodeRepairsTests {
         #expect(!CodeRepairs.isMisreadDocstringQuote("x = 1"))
     }
 }
+
+@Suite(.timeLimit(.minutes(1)))
+struct MarkdownFenceTests {
+    @Test(arguments: [
+        ("guard let x = y else { return }", "swift"),
+        ("fn main() {\n    let mut x = 1;\n}", "rust"),
+        ("package main\n\nfunc main() {\n    x := 1\n}", "go"),
+        ("const f = (x) => x * 2", "javascript"),
+        ("def f(self):\n    return self.x", "python"),
+        ("SELECT name FROM users", "sql"),
+    ])
+    func tagsTheLanguage(_ code: String, _ tag: String) {
+        #expect(MarkdownFence.tag(for: code) == tag)
+    }
+
+    @Test func fencesSafely() {
+        #expect(MarkdownFence.tag(for: "hello world") == nil)
+        #expect(MarkdownFence.wrapping("hello") == "```\nhello\n```")
+        // Code with its own ``` gets a longer fence.
+        #expect(MarkdownFence.wrapping("let s = \"```\"").hasPrefix("````"))
+    }
+}

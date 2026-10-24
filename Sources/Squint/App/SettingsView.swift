@@ -56,6 +56,10 @@ struct SettingsView: View {
                     SettingsLabel(title: "Code Mode", detail: "Keeps indentation, blank lines and brackets",
                                   systemName: "chevron.left.forwardslash.chevron.right", color: .indigo)
                 }
+                Toggle(isOn: $preferences.copyAsMarkdown) {
+                    SettingsLabel(title: "Copy as Markdown", detail: "Code goes in a fenced block with its language",
+                                  systemName: "number", color: .purple)
+                }
                 Toggle(isOn: $preferences.playSound) {
                     SettingsLabel(title: "Sound when text is copied", systemName: "speaker.wave.2.fill", color: .pink)
                 }

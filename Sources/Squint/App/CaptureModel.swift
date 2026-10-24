@@ -142,11 +142,12 @@ final class CaptureModel {
 
     private func recognize(_ image: URL, code: Bool) async -> String? {
         do {
-            let text = try await Self.read(image, code: code, language: preferences.language, words: preferences.customWords)
-            guard !text.isEmpty else {
+            let read = try await Self.read(image, code: code, language: preferences.language, words: preferences.customWords)
+            guard !read.isEmpty else {
                 fail(String(localized: "No text found. Try a larger area."))
                 return nil
             }
+            let text = code && preferences.copyAsMarkdown ? MarkdownFence.wrapping(read) : read
             pasteboard.clearContents()
             pasteboard.setString(text, forType: .string)
             status = .copied

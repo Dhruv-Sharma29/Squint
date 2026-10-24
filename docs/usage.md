@@ -45,6 +45,7 @@ Open **Settings…** from the Squint menu (⌘,).
 | **Code Mode** | The default mode for captures |
 | **Play a sound when text is copied** | Off by default |
 | **Language** (Plain Mode) | Automatic, or a fixed language. On macOS 27, Vision reads 33 languages, including Hindi and Marathi. |
+| **Copy as Markdown** | Off by default. In Code Mode, copies the code in a fenced block with its language (` ```python `), ready for a README, a chat or an AI prompt. The language is left off when Squint isn't sure. |
 | **Open links** | Off by default. Opens the first web address (http or https) in the copied text. |
 | **Custom words** | Names and terms to spell exactly, separated by commas. A word one letter away from one of them, such as `Flaxmers` for `Flaxmere`, is corrected; words under four letters are left alone. |
 | **Show in menu bar** | On by default. When hidden, use the shortcut or `squint://` links, and open Squint again (from Finder or Spotlight) to see Settings. |

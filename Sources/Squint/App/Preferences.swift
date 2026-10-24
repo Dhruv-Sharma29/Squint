@@ -22,6 +22,11 @@ final class Preferences {
         didSet { defaults.set(showMenuBarIcon, forKey: "showMenuBarIcon") }
     }
 
+    /// Code Mode copies a fenced Markdown block with a language tag.
+    var copyAsMarkdown: Bool {
+        didSet { defaults.set(copyAsMarkdown, forKey: "copyAsMarkdown") }
+    }
+
     /// Opens the first web address in the copied text.
     var openFirstLink: Bool {
         didSet { defaults.set(openFirstLink, forKey: "openFirstLink") }
@@ -63,6 +68,7 @@ final class Preferences {
         language = defaults.string(forKey: "language")
         showMenuBarIcon = defaults.object(forKey: "showMenuBarIcon") as? Bool ?? true
         openFirstLink = defaults.bool(forKey: "openFirstLink")
+        copyAsMarkdown = defaults.bool(forKey: "copyAsMarkdown")
         customWords = defaults.stringArray(forKey: "customWords") ?? []
         launchAtLogin = LaunchAtLogin.isEnabled
     }

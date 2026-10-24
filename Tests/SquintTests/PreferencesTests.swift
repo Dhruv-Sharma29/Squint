@@ -18,6 +18,7 @@ struct PreferencesTests {
         #expect(preferences.language == nil)
         #expect(preferences.showMenuBarIcon)
         #expect(!preferences.openFirstLink)
+        #expect(!preferences.copyAsMarkdown)
         #expect(preferences.customWords.isEmpty)
     }
 
@@ -33,6 +34,7 @@ struct PreferencesTests {
         first.language = "hi-IN"
         first.showMenuBarIcon = false
         first.openFirstLink = true
+        first.copyAsMarkdown = true
         first.customWords = ["Kubernetes", "Flaxmere"]
 
         let relaunched = Preferences(defaults: defaults)
@@ -42,6 +44,7 @@ struct PreferencesTests {
         #expect(relaunched.language == "hi-IN")
         #expect(!relaunched.showMenuBarIcon)
         #expect(relaunched.openFirstLink)
+        #expect(relaunched.copyAsMarkdown)
         #expect(relaunched.customWords == ["Kubernetes", "Flaxmere"])
 
         relaunched.language = nil
