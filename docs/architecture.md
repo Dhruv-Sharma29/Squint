@@ -5,6 +5,7 @@
 - [The code-layout pass](#the-code-layout-pass)
 - [Concurrency](#concurrency)
 - [Design decisions](#design-decisions)
+- [Security, privacy, performance and accessibility](#security-privacy-performance-and-accessibility)
 - [Known limitations](#known-limitations)
 
 ## Pipeline
@@ -124,6 +125,43 @@ The package compiles in Swift 6 language mode with strict concurrency checking.
 | Homebrew formula built from source | A cask with a prebuilt app | Avoids Gatekeeper quarantine without a paid Developer ID; see [Installation](installation.md#why-build-from-source-instead-of-a-cask). |
 
 Deliberate simplifications are marked in the source with `ponytail:` comments. Each comment names the limit of the simplification and how to improve on it.
+
+## Security, privacy, performance and accessibility
+
+Reviewed for 0.2.0. Each row says how it was checked.
+
+### Security and privacy
+
+| Area | State | How it was checked |
+|---|---|---|
+| Network | **None.** Vision runs on device, and the source contains no networking API. | Source scan; OCR with all network access denied by the OS sandbox (`sandbox-exec … (deny network*)`) gives identical output. |
+| Screenshots | Written to the per-user temporary folder under a random name and **deleted right after recognition**, including on failure. Image files copied in Finder are read from a copy; the original is never touched. | `CaptureModelTests`, `ClipboardImageTests` |
+| Permissions | Screen Recording only, requested on first capture. Without it, the selection overlay never opens and the menu explains the fix. | `CaptureModelTests` |
+| `squint://` links | Two commands (capture, read the clipboard image); anything else is rejected and reported. Any app can open a link, but the worst it can do is start a selection or replace the clipboard with the text of the image already on it, and browsers ask before opening custom links. | `LinkCommandTests`, `CaptureModelTests` |
+| Code signing | Ad-hoc signed with the **hardened runtime**, which blocks code injection and unsigned libraries. Not signed with a Developer ID or notarized: that needs a paid Apple account. Homebrew builds from source, so Gatekeeper doesn't apply. | `codesign -dv` shows `flags=0x10002(adhoc,runtime)` |
+| Sandbox | Not sandboxed. Squint launches the system's `screencapture` tool and writes temporary files; App Sandbox would need a different capture method (ScreenCaptureKit) and entitlements. A trade-off for a Homebrew app, required for an App Store build. | Design decision |
+| Dependencies | **No third-party packages.** CI pins `actions/checkout` to a commit. | `Package.swift`, `.github/workflows/ci.yml` |
+| Secrets | None in the repository or the app. | Source scan |
+
+### Performance
+
+Measured on Apple silicon, macOS 27.0.1.
+
+| Measurement | Result |
+|---|---|
+| Recognition per capture, including process start-up (benchmark) | median 0.12–0.13 s, 95th percentile 0.14–0.15 s |
+| Typical capture (code region) | 0.13 s, 66 MB peak memory |
+| Worst case: a full 5K-display capture (5120 × 2549) | 0.27 s, 231 MB peak, released afterwards. `InkMap` holds a full-colour copy of the image. |
+| Menu bar app at idle | 75 MB resident, 0% CPU, 3 threads |
+| Repeated recognitions in one process | 80 in a row with identical accuracy to separate processes: no sign of the macOS 27 Vision regression TRex reported |
+
+### Accessibility
+
+- Menus, Settings and the shortcut recorder use standard controls with text labels. The menu bar icon and the Code Mode item have VoiceOver labels and values.
+- Copies and failures are announced to VoiceOver, so the icon change is never the only feedback.
+- Everything works from the keyboard: the global shortcut, menu key equivalents, Spotlight and Shortcuts.
+- No animations, so Reduce Motion needs no special handling.
+- Settings renders correctly in light and dark appearance (checked by rendering the real view off-screen).
 
 ## Known limitations
 
