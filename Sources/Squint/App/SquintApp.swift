@@ -19,5 +19,6 @@ struct SquintApp: App {
         Settings {
             SettingsView(model: appDelegate.model)
         }
+        .windowResizability(.contentSize) // the window fits its content instead of stretching wide
     }
 }
