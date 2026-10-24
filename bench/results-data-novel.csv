@@ -1,0 +1,186 @@
+id,system,language,condition,theme,font,size,line_numbers,cer,lines_exact,exact,parses
+js-01,claude,javascript,video-1080p,monokai,Courier New,14,no line numbers,0.0000,1.0000,True,True
+js-01,livetext,javascript,video-1080p,monokai,Courier New,14,no line numbers,0.1259,0.0000,False,False
+js-01,plain,javascript,video-1080p,monokai,Courier New,14,no line numbers,0.1259,0.0000,False,False
+js-01,squint,javascript,video-1080p,monokai,Courier New,14,no line numbers,0.0514,0.1333,False,False
+js-01,trex,javascript,video-1080p,monokai,Courier New,14,no line numbers,0.1011,0.0000,False,False
+js-03,claude,javascript,video-1080p,solarized-dark,Courier New,14,with line numbers,0.0000,1.0000,True,True
+js-03,livetext,javascript,video-1080p,solarized-dark,Courier New,14,with line numbers,0.3784,0.0000,False,False
+js-03,plain,javascript,video-1080p,solarized-dark,Courier New,14,with line numbers,0.2236,0.0000,False,False
+js-03,squint,javascript,video-1080p,solarized-dark,Courier New,14,with line numbers,0.2629,0.0000,False,False
+js-03,trex,javascript,video-1080p,solarized-dark,Courier New,14,with line numbers,0.4079,0.0000,False,False
+js-04,claude,javascript,screenshot,github-light,Andale Mono,20,no line numbers,0.0000,1.0000,True,True
+js-04,livetext,javascript,screenshot,github-light,Andale Mono,20,no line numbers,0.1629,0.0667,False,False
+js-04,plain,javascript,screenshot,github-light,Andale Mono,20,no line numbers,0.1629,0.0667,False,False
+js-04,squint,javascript,screenshot,github-light,Andale Mono,20,no line numbers,0.0000,1.0000,True,True
+js-04,trex,javascript,screenshot,github-light,Andale Mono,20,no line numbers,0.1713,0.0667,False,False
+js-05,claude,javascript,video-720p,light-plus,Courier New,13,with line numbers,0.0000,1.0000,True,True
+js-05,livetext,javascript,video-720p,light-plus,Courier New,13,with line numbers,0.1379,0.0000,False,False
+js-05,plain,javascript,video-720p,light-plus,Courier New,13,with line numbers,0.1310,0.0000,False,False
+js-05,squint,javascript,video-720p,light-plus,Courier New,13,with line numbers,0.1241,0.1667,False,False
+js-05,trex,javascript,video-720p,light-plus,Courier New,13,with line numbers,0.1448,0.0000,False,False
+js-06,claude,javascript,screenshot,light-plus,Menlo,13,no line numbers,0.0000,1.0000,True,True
+js-06,livetext,javascript,screenshot,light-plus,Menlo,13,no line numbers,0.1104,0.0000,False,False
+js-06,plain,javascript,screenshot,light-plus,Menlo,13,no line numbers,0.1104,0.0000,False,False
+js-06,squint,javascript,screenshot,light-plus,Menlo,13,no line numbers,0.0191,0.7143,False,False
+js-06,trex,javascript,screenshot,light-plus,Menlo,13,no line numbers,0.1117,0.0000,False,False
+js-07,claude,javascript,video-1080p,dark-plus,PT Mono,13,no line numbers,0.0000,1.0000,True,True
+js-07,livetext,javascript,video-1080p,dark-plus,PT Mono,13,no line numbers,0.0861,0.1250,False,False
+js-07,plain,javascript,video-1080p,dark-plus,PT Mono,13,no line numbers,0.0861,0.1250,False,False
+js-07,squint,javascript,video-1080p,dark-plus,PT Mono,13,no line numbers,0.0000,1.0000,True,True
+js-07,trex,javascript,video-1080p,dark-plus,PT Mono,13,no line numbers,0.0824,0.1250,False,False
+js-08,claude,javascript,screenshot,monokai,SF Mono,16,no line numbers,0.0000,1.0000,True,True
+js-08,livetext,javascript,screenshot,monokai,SF Mono,16,no line numbers,0.1140,0.0000,False,False
+js-08,plain,javascript,screenshot,monokai,SF Mono,16,no line numbers,0.1140,0.0000,False,False
+js-08,squint,javascript,screenshot,monokai,SF Mono,16,no line numbers,0.0219,0.5882,False,False
+js-08,trex,javascript,screenshot,monokai,SF Mono,16,no line numbers,0.1126,0.0000,False,False
+js-10,claude,javascript,screenshot,one-dark,Menlo,13,no line numbers,0.0000,1.0000,True,True
+js-10,livetext,javascript,screenshot,one-dark,Menlo,13,no line numbers,0.2238,0.0000,False,False
+js-10,plain,javascript,screenshot,one-dark,Menlo,13,no line numbers,0.2115,0.0000,False,False
+js-10,squint,javascript,screenshot,one-dark,Menlo,13,no line numbers,0.0246,0.7727,False,False
+js-10,trex,javascript,screenshot,one-dark,Menlo,13,no line numbers,0.2156,0.0000,False,False
+js-11,claude,javascript,video-1080p,monokai,Courier New,20,no line numbers,0.0000,1.0000,True,True
+js-11,livetext,javascript,video-1080p,monokai,Courier New,20,no line numbers,0.1276,0.0714,False,False
+js-11,plain,javascript,video-1080p,monokai,Courier New,20,no line numbers,0.1276,0.0714,False,False
+js-11,squint,javascript,video-1080p,monokai,Courier New,20,no line numbers,0.0485,0.3571,False,False
+js-11,trex,javascript,video-1080p,monokai,Courier New,20,no line numbers,0.1224,0.0000,False,False
+js-12,claude,javascript,screenshot,dark-plus,Courier New,14,no line numbers,0.0000,1.0000,True,True
+js-12,livetext,javascript,screenshot,dark-plus,Courier New,14,no line numbers,0.1506,0.0000,False,False
+js-12,plain,javascript,screenshot,dark-plus,Courier New,14,no line numbers,0.1506,0.0000,False,False
+js-12,squint,javascript,screenshot,dark-plus,Courier New,14,no line numbers,0.0787,0.0588,False,False
+js-12,trex,javascript,screenshot,dark-plus,Courier New,14,no line numbers,0.1416,0.0000,False,False
+js-13,claude,javascript,video-720p,one-dark,Monaco,12,no line numbers,0.0000,1.0000,True,True
+js-13,livetext,javascript,video-720p,one-dark,Monaco,12,no line numbers,0.1768,0.0000,False,False
+js-13,plain,javascript,video-720p,one-dark,Monaco,12,no line numbers,0.1646,0.0000,False,False
+js-13,squint,javascript,video-720p,one-dark,Monaco,12,no line numbers,0.0244,0.6250,False,False
+js-13,trex,javascript,video-720p,one-dark,Monaco,12,no line numbers,0.1646,0.0000,False,False
+js-14,claude,javascript,video-1080p,monokai,Monaco,13,with line numbers,0.0000,1.0000,True,True
+js-14,livetext,javascript,video-1080p,monokai,Monaco,13,with line numbers,0.1187,0.0000,False,False
+js-14,plain,javascript,video-1080p,monokai,Monaco,13,with line numbers,0.0871,0.0000,False,False
+js-14,squint,javascript,video-1080p,monokai,Monaco,13,with line numbers,0.1689,0.0000,False,False
+js-14,trex,javascript,video-1080p,monokai,Monaco,13,with line numbers,0.1187,0.0000,False,False
+js-16,claude,javascript,screenshot,dark-plus,Courier New,18,with line numbers,0.0000,1.0000,True,True
+js-16,livetext,javascript,screenshot,dark-plus,Courier New,18,with line numbers,0.2759,0.0000,False,False
+js-16,plain,javascript,screenshot,dark-plus,Courier New,18,with line numbers,0.1617,0.0000,False,False
+js-16,squint,javascript,screenshot,dark-plus,Courier New,18,with line numbers,0.1476,0.0000,False,False
+js-16,trex,javascript,screenshot,dark-plus,Courier New,18,with line numbers,0.2513,0.0000,False,False
+js-17,claude,javascript,video-1080p,solarized-dark,Monaco,13,with line numbers,0.0000,1.0000,True,True
+js-17,livetext,javascript,video-1080p,solarized-dark,Monaco,13,with line numbers,0.2750,0.0000,False,False
+js-17,plain,javascript,video-1080p,solarized-dark,Monaco,13,with line numbers,0.1705,0.0000,False,False
+js-17,squint,javascript,video-1080p,solarized-dark,Monaco,13,with line numbers,0.1682,0.0000,False,False
+js-17,trex,javascript,video-1080p,solarized-dark,Monaco,13,with line numbers,0.2000,0.0000,False,False
+js-18,claude,javascript,video-720p,light-plus,PT Mono,18,no line numbers,0.0000,1.0000,True,True
+js-18,livetext,javascript,video-720p,light-plus,PT Mono,18,no line numbers,0.1548,0.1250,False,False
+js-18,plain,javascript,video-720p,light-plus,PT Mono,18,no line numbers,0.1419,0.1250,False,False
+js-18,squint,javascript,video-720p,light-plus,PT Mono,18,no line numbers,0.0065,0.8750,False,False
+js-18,trex,javascript,video-720p,light-plus,PT Mono,18,no line numbers,0.1935,0.0000,False,False
+js-19,claude,javascript,video-720p,one-dark,PT Mono,14,no line numbers,0.0000,1.0000,True,True
+js-19,livetext,javascript,video-720p,one-dark,PT Mono,14,no line numbers,0.2371,0.0000,False,False
+js-19,plain,javascript,video-720p,one-dark,PT Mono,14,no line numbers,0.1200,0.0000,False,False
+js-19,squint,javascript,video-720p,one-dark,PT Mono,14,no line numbers,0.0571,0.2222,False,False
+js-19,trex,javascript,video-720p,one-dark,PT Mono,14,no line numbers,0.0829,0.1111,False,False
+js-20,claude,javascript,video-1080p,solarized-dark,Andale Mono,20,no line numbers,0.0000,1.0000,True,True
+js-20,livetext,javascript,video-1080p,solarized-dark,Andale Mono,20,no line numbers,0.1670,0.0000,False,False
+js-20,plain,javascript,video-1080p,solarized-dark,Andale Mono,20,no line numbers,0.1631,0.0000,False,False
+js-20,squint,javascript,video-1080p,solarized-dark,Andale Mono,20,no line numbers,0.0505,0.5556,False,False
+js-20,trex,javascript,video-1080p,solarized-dark,Andale Mono,20,no line numbers,0.1359,0.0000,False,False
+py-01,claude,python,video-720p,monokai,SF Mono,16,no line numbers,0.0000,1.0000,True,True
+py-01,livetext,python,video-720p,monokai,SF Mono,16,no line numbers,0.1613,0.1667,False,False
+py-01,plain,python,video-720p,monokai,SF Mono,16,no line numbers,0.1613,0.1667,False,False
+py-01,squint,python,video-720p,monokai,SF Mono,16,no line numbers,0.0860,0.1667,False,False
+py-01,trex,python,video-720p,monokai,SF Mono,16,no line numbers,0.1882,0.0000,False,False
+py-02,claude,python,screenshot,dark-plus,Menlo,13,no line numbers,0.0000,1.0000,True,True
+py-02,livetext,python,screenshot,dark-plus,Menlo,13,no line numbers,0.2021,0.0667,False,False
+py-02,plain,python,screenshot,dark-plus,Menlo,13,no line numbers,0.2021,0.0667,False,False
+py-02,squint,python,screenshot,dark-plus,Menlo,13,no line numbers,0.0246,0.6667,False,False
+py-02,trex,python,screenshot,dark-plus,Menlo,13,no line numbers,0.2039,0.0667,False,False
+py-03,claude,python,video-1080p,light-plus,SF Mono,18,with line numbers,0.0000,1.0000,True,True
+py-03,livetext,python,video-1080p,light-plus,SF Mono,18,with line numbers,0.1652,0.0000,False,False
+py-03,plain,python,video-1080p,light-plus,SF Mono,18,with line numbers,0.1460,0.0000,False,False
+py-03,squint,python,video-1080p,light-plus,SF Mono,18,with line numbers,0.1114,0.0000,False,False
+py-03,trex,python,video-1080p,light-plus,SF Mono,18,with line numbers,0.2100,0.0000,False,False
+py-04,claude,python,screenshot,solarized-dark,Andale Mono,20,no line numbers,0.0000,1.0000,True,True
+py-04,livetext,python,screenshot,solarized-dark,Andale Mono,20,no line numbers,0.2244,0.0000,False,False
+py-04,plain,python,screenshot,solarized-dark,Andale Mono,20,no line numbers,0.2179,0.0000,False,False
+py-04,squint,python,screenshot,solarized-dark,Andale Mono,20,no line numbers,0.0363,0.6429,False,False
+py-04,trex,python,screenshot,solarized-dark,Andale Mono,20,no line numbers,0.1902,0.0000,False,False
+py-05,claude,python,video-720p,dark-plus,Monaco,12,with line numbers,0.0000,1.0000,True,True
+py-05,livetext,python,video-720p,dark-plus,Monaco,12,with line numbers,0.2662,0.0000,False,False
+py-05,plain,python,video-720p,dark-plus,Monaco,12,with line numbers,0.2121,0.0000,False,False
+py-05,squint,python,video-720p,dark-plus,Monaco,12,with line numbers,0.1515,0.0667,False,False
+py-05,trex,python,video-720p,dark-plus,Monaco,12,with line numbers,0.2641,0.0000,False,False
+py-06,claude,python,screenshot,github-light,Monaco,20,with line numbers,0.0000,1.0000,True,True
+py-06,livetext,python,screenshot,github-light,Monaco,20,with line numbers,0.1060,0.0625,False,False
+py-06,plain,python,screenshot,github-light,Monaco,20,with line numbers,0.0974,0.0000,False,False
+py-06,squint,python,screenshot,github-light,Monaco,20,with line numbers,0.0946,0.1250,False,False
+py-06,trex,python,screenshot,github-light,Monaco,20,with line numbers,0.1261,0.0000,False,False
+py-07,claude,python,video-720p,dark-plus,Monaco,14,with line numbers,0.0000,1.0000,True,True
+py-07,livetext,python,video-720p,dark-plus,Monaco,14,with line numbers,0.0969,0.0000,False,False
+py-07,plain,python,video-720p,dark-plus,Monaco,14,with line numbers,0.0942,0.1111,False,False
+py-07,squint,python,video-720p,dark-plus,Monaco,14,with line numbers,0.1099,0.0000,False,False
+py-07,trex,python,video-720p,dark-plus,Monaco,14,with line numbers,0.1361,0.0000,False,False
+py-08,claude,python,video-1080p,one-dark,Andale Mono,12,with line numbers,0.0000,1.0000,True,True
+py-08,livetext,python,video-1080p,one-dark,Andale Mono,12,with line numbers,0.1716,0.0000,False,False
+py-08,plain,python,video-1080p,one-dark,Andale Mono,12,with line numbers,0.1617,0.0000,False,False
+py-08,squint,python,video-1080p,one-dark,Andale Mono,12,with line numbers,0.1188,0.0000,False,False
+py-08,trex,python,video-1080p,one-dark,Andale Mono,12,with line numbers,0.1980,0.0000,False,False
+py-09,claude,python,video-1080p,solarized-dark,PT Mono,14,no line numbers,0.0000,1.0000,True,True
+py-09,livetext,python,video-1080p,solarized-dark,PT Mono,14,no line numbers,0.0899,0.0714,False,False
+py-09,plain,python,video-1080p,solarized-dark,PT Mono,14,no line numbers,0.0899,0.0714,False,False
+py-09,squint,python,video-1080p,solarized-dark,PT Mono,14,no line numbers,0.0000,1.0000,True,True
+py-09,trex,python,video-1080p,solarized-dark,PT Mono,14,no line numbers,0.0886,0.0714,False,False
+py-10,claude,python,screenshot,monokai,Courier New,16,with line numbers,0.0000,1.0000,True,True
+py-10,livetext,python,screenshot,monokai,Courier New,16,with line numbers,0.2020,0.0000,False,False
+py-10,plain,python,screenshot,monokai,Courier New,16,with line numbers,0.1824,0.0000,False,False
+py-10,squint,python,screenshot,monokai,Courier New,16,with line numbers,0.1596,0.0000,False,False
+py-10,trex,python,screenshot,monokai,Courier New,16,with line numbers,0.1987,0.0000,False,False
+py-11,claude,python,screenshot,dark-plus,Andale Mono,18,no line numbers,0.0000,1.0000,True,True
+py-11,livetext,python,screenshot,dark-plus,Andale Mono,18,no line numbers,0.0969,0.0000,False,False
+py-11,plain,python,screenshot,dark-plus,Andale Mono,18,no line numbers,0.0993,0.0000,False,False
+py-11,squint,python,screenshot,dark-plus,Andale Mono,18,no line numbers,0.0121,0.6667,False,False
+py-11,trex,python,screenshot,dark-plus,Andale Mono,18,no line numbers,0.0993,0.0000,False,False
+py-12,claude,python,video-1080p,solarized-dark,Menlo,12,no line numbers,0.0000,1.0000,True,True
+py-12,livetext,python,video-1080p,solarized-dark,Menlo,12,no line numbers,0.1485,0.0625,False,False
+py-12,plain,python,video-1080p,solarized-dark,Menlo,12,no line numbers,0.1471,0.0625,False,False
+py-12,squint,python,video-1080p,solarized-dark,Menlo,12,no line numbers,0.0044,0.8125,False,False
+py-12,trex,python,video-1080p,solarized-dark,Menlo,12,no line numbers,0.1485,0.0625,False,False
+py-13,claude,python,video-720p,dark-plus,Courier New,14,with line numbers,0.0000,1.0000,True,True
+py-13,livetext,python,video-720p,dark-plus,Courier New,14,with line numbers,0.3233,0.0000,False,False
+py-13,plain,python,video-720p,dark-plus,Courier New,14,with line numbers,0.2967,0.0000,False,False
+py-13,squint,python,video-720p,dark-plus,Courier New,14,with line numbers,0.2233,0.0000,False,False
+py-13,trex,python,video-720p,dark-plus,Courier New,14,with line numbers,0.3667,0.0000,False,False
+py-14,claude,python,screenshot,solarized-dark,Courier New,14,no line numbers,0.0000,1.0000,True,True
+py-14,livetext,python,screenshot,solarized-dark,Courier New,14,no line numbers,0.1550,0.0000,False,False
+py-14,plain,python,screenshot,solarized-dark,Courier New,14,no line numbers,0.1783,0.0000,False,False
+py-14,squint,python,screenshot,solarized-dark,Courier New,14,no line numbers,0.0341,0.4706,False,False
+py-14,trex,python,screenshot,solarized-dark,Courier New,14,no line numbers,0.1597,0.0000,False,False
+py-15,claude,python,video-720p,github-light,Andale Mono,12,with line numbers,0.0000,1.0000,True,True
+py-15,livetext,python,video-720p,github-light,Andale Mono,12,with line numbers,0.2515,0.0000,False,False
+py-15,plain,python,video-720p,github-light,Andale Mono,12,with line numbers,0.2395,0.0000,False,False
+py-15,squint,python,video-720p,github-light,Andale Mono,12,with line numbers,0.0060,0.8333,False,False
+py-15,trex,python,video-720p,github-light,Andale Mono,12,with line numbers,0.2455,0.0000,False,False
+py-16,claude,python,video-1080p,monokai,Menlo,16,with line numbers,0.0000,1.0000,True,True
+py-16,livetext,python,video-1080p,monokai,Menlo,16,with line numbers,0.1811,0.0000,False,False
+py-16,plain,python,video-1080p,monokai,Menlo,16,with line numbers,0.1440,0.0000,False,False
+py-16,squint,python,video-1080p,monokai,Menlo,16,with line numbers,0.0988,0.1667,False,False
+py-16,trex,python,video-1080p,monokai,Menlo,16,with line numbers,0.1811,0.0000,False,False
+py-17,claude,python,video-720p,solarized-dark,Menlo,20,with line numbers,0.0000,1.0000,True,True
+py-17,livetext,python,video-720p,solarized-dark,Menlo,20,with line numbers,0.1733,0.0000,False,False
+py-17,plain,python,video-720p,solarized-dark,Menlo,20,with line numbers,0.1106,0.0000,False,False
+py-17,squint,python,video-720p,solarized-dark,Menlo,20,with line numbers,0.1072,0.0000,False,False
+py-17,trex,python,video-720p,solarized-dark,Menlo,20,with line numbers,0.1699,0.0000,False,False
+py-18,claude,python,video-1080p,dark-plus,Andale Mono,12,no line numbers,0.0000,1.0000,True,True
+py-18,livetext,python,video-1080p,dark-plus,Andale Mono,12,no line numbers,0.2080,0.0000,False,False
+py-18,plain,python,video-1080p,dark-plus,Andale Mono,12,no line numbers,0.2110,0.0000,False,False
+py-18,squint,python,video-1080p,dark-plus,Andale Mono,12,no line numbers,0.0520,0.7059,False,False
+py-18,trex,python,video-1080p,dark-plus,Andale Mono,12,no line numbers,0.2202,0.0000,False,False
+py-19,claude,python,video-720p,github-light,SF Mono,18,no line numbers,0.0000,1.0000,True,True
+py-19,livetext,python,video-720p,github-light,SF Mono,18,no line numbers,0.1519,0.0000,False,False
+py-19,plain,python,video-720p,github-light,SF Mono,18,no line numbers,0.1598,0.0000,False,False
+py-19,squint,python,video-720p,github-light,SF Mono,18,no line numbers,0.0355,0.0625,False,False
+py-19,trex,python,video-720p,github-light,SF Mono,18,no line numbers,0.1479,0.0000,False,False
+py-20,claude,python,video-1080p,solarized-dark,Andale Mono,12,no line numbers,0.0000,1.0000,True,True
+py-20,livetext,python,video-1080p,solarized-dark,Andale Mono,12,no line numbers,0.2355,0.0000,False,False
+py-20,plain,python,video-1080p,solarized-dark,Andale Mono,12,no line numbers,0.2355,0.0000,False,False
+py-20,squint,python,video-1080p,solarized-dark,Andale Mono,12,no line numbers,0.0032,0.9000,False,False
+py-20,trex,python,video-1080p,solarized-dark,Andale Mono,12,no line numbers,0.2323,0.0000,False,False
