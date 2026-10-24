@@ -8,11 +8,35 @@
 <meta name="color-scheme" content="light dark">
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="canonical" href="https://dhruv-sharma29.github.io/Squint/">
+<meta name="theme-color" content="#EEF1F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111833" media="(prefers-color-scheme: dark)">
+<meta property="og:site_name" content="Squint">
+<meta property="og:url" content="https://dhruv-sharma29.github.io/Squint/">
 <meta property="og:title" content="Squint: copy code from any screen on your Mac">
 <meta property="og:description" content="On-device screen OCR for programmers. Indentation, blank lines and closing brackets survive the trip to your clipboard.">
 <meta property="og:image" content="https://dhruv-sharma29.github.io/Squint/social.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="515">
+<meta property="og:image:alt" content="One code screenshot read by plain OCR (0 of 12 lines right) and by Squint (12 of 12 right)">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Squint",
+  "description": "On-device screen OCR for programmers on macOS that keeps indentation, blank lines and closing brackets.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "macOS 14 or later",
+  "softwareVersion": "0.2.0",
+  "url": "https://dhruv-sharma29.github.io/Squint/",
+  "image": "https://dhruv-sharma29.github.io/Squint/icon.png",
+  "license": "https://opensource.org/licenses/MIT",
+  "codeRepository": "https://github.com/Dhruv-Sharma29/Squint",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
 <link rel="preload" href="fonts/MartianMono-normal-400-800.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/AtkinsonHyperlegible-normal-400.woff2" as="font" type="font/woff2" crossorigin>
 <style>
@@ -192,11 +216,26 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 footer nav { display: flex; flex-wrap: wrap; gap: 1.25rem; }
 footer p { margin: 0; }
 
+.product { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); gap: clamp(2rem, 5vw, 5rem); align-items: center; margin-top: 2rem; }
+.product picture img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
+.product ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 1.2rem; }
+.product li { color: var(--ink-soft); }
+.product li strong { display: block; color: var(--ink); }
+
+.faq { margin-top: 2rem; max-width: 46rem; border-top: 1.5px solid var(--ink); }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { cursor: pointer; padding: 1.1rem 2rem 1.1rem 0; font-weight: 700; list-style: none; position: relative; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; position: absolute; right: 0.25rem; top: 0.95rem; font: 600 1.3rem/1 var(--mono); color: var(--finder); }
+.faq details[open] summary::after { content: "−"; }
+.faq details p { color: var(--ink-soft); margin: 0 0 1.2rem; }
+
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (max-width: 860px) {
   .demo, .bench { grid-template-columns: 1fr; }
   .bar-row { grid-template-columns: 1fr; gap: 0.35rem; }
+  .product { grid-template-columns: 1fr; }
   .fixes, .fixes tbody, .fixes tr, .fixes td { display: block; width: 100% !important; }
   .fixes thead { display: none; }
   .fixes tr { padding: 1rem 0; border-bottom: 1px solid var(--line); }
@@ -226,6 +265,7 @@ footer p { margin: 0; }
       <a href="#fixes">What it fixes</a>
       <a href="#measured">Benchmark</a>
       <a href="#install">Install</a>
+      <a href="#faq">FAQ</a>
       <a href="https://github.com/Dhruv-Sharma29/Squint">GitHub</a>
     </nav>
   </div>
@@ -362,6 +402,24 @@ footer p { margin: 0; }
     </div>
   </section>
 
+  <section class="block" aria-labelledby="app-title">
+    <div class="wrap">
+      <h2 id="app-title">A menu bar app that stays out of the way</h2>
+      <div class="product">
+        <ul>
+          <li><strong>No window, no Dock icon.</strong> Squint waits in the menu bar until you press its shortcut.</li>
+          <li><strong>Settings on one screen.</strong> Record your own shortcut, choose Code Mode or a language for prose, and open Squint at login.</li>
+          <li><strong>It tells you what's wrong.</strong> If macOS hasn't granted Screen Recording yet, Settings and the menu say so, with a button that opens the right pane.</li>
+          <li><strong>Feedback you can hear, too.</strong> VoiceOver announces every copy and every failure, and a sound is one switch away.</li>
+        </ul>
+        <picture>
+          <source srcset="settings-dark.png" media="(prefers-color-scheme: dark)">
+          <img src="settings-light.png" width="480" height="579" loading="lazy" alt="Squint's Settings window: shortcut, Code Mode, sound, Plain Mode language, Screen Recording allowed, and open at login">
+        </picture>
+      </div>
+    </div>
+  </section>
+
   <section class="block" aria-labelledby="private-title">
     <div class="wrap">
       <h2 id="private-title">Your screen stays on your Mac</h2>
@@ -386,6 +444,27 @@ footer p { margin: 0; }
         <li><div><h3>Capture</h3><p>Press <kbd>⇧</kbd><kbd>⌘</kbd><kbd>2</kbd>, drag over some code, and paste.</p></div></li>
       </ol>
       <p class="fine">Prefer to build it yourself? See the <a href="https://github.com/Dhruv-Sharma29/Squint/blob/main/docs/installation.md">installation guide</a>.</p>
+    </div>
+  </section>
+  <section class="block" id="faq" aria-labelledby="faq-title">
+    <div class="wrap">
+      <h2 id="faq-title">Questions</h2>
+      <div class="faq">
+        <details><summary>Why not paste the screenshot into an AI chatbot?</summary>
+          <p>On Squint's benchmark, an AI chat assistant transcribed every image perfectly, and Squint didn't. Squint's case is different: one shortcut and about a tenth of a second instead of an upload, a prompt and a wait; it works offline; your screen never leaves your Mac, which matters for work code and exams; and it's free with no limits.</p></details>
+        <details><summary>How accurate is it?</summary>
+          <p>Across 99 benchmark images, Squint averaged 2.4–3.4% character errors, against 15.8–19.2% for the OCR built into macOS, and got 53–71% of lines exactly right. Most captures still need a small fix before they run, usually one misread character. The <a href="https://github.com/Dhruv-Sharma29/Squint/blob/main/docs/evaluation.md">evaluation</a> has every number.</p></details>
+        <details><summary>Does it work offline?</summary>
+          <p>Yes. Recognition uses Apple's on-device Vision framework, and Squint makes no network requests. It produces identical output with all network access blocked.</p></details>
+        <details><summary>Which languages does it read?</summary>
+          <p>Code Mode is tested on Python and JavaScript and works on most code written in Latin script. Plain Mode reads prose in up to 33 languages on current macOS, including Hindi and Marathi, and can detect the language automatically.</p></details>
+        <details><summary>Why don't Squint's actions show up in Spotlight?</summary>
+          <p>macOS only runs Spotlight, Siri and Shortcuts actions for apps signed with an Apple Team ID, and Homebrew builds aren't. Build from source with your free Apple Development certificate to get them; the <a href="https://github.com/Dhruv-Sharma29/Squint/blob/main/docs/usage.md#spotlight-siri-and-shortcuts">usage guide</a> shows how. Everything else works either way.</p></details>
+        <details><summary>Which Macs does it run on?</summary>
+          <p>macOS 14 Sonoma or later. It's built and tested on Apple silicon; Intel Macs should work but aren't tested yet.</p></details>
+        <details><summary>Is it really free?</summary>
+          <p>Yes. Squint is open source under the MIT license, with no trial, account or upsell.</p></details>
+      </div>
     </div>
   </section>
 </main>
