@@ -99,7 +99,7 @@ Got a screenshot in chat? Copy it, then **Read Clipboard Image** turns it into t
 <td valign="top">
 
 ### 💸 Free and open source
-MIT-licensed, with no trial and no upsell. Read the code, change it, ship it.
+MIT-licensed, with no trial and no upsell. Every line is open to read, learn from and improve.
 
 </td>
 </tr>
