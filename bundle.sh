@@ -38,5 +38,8 @@ cat > "$app/Contents/Info.plist" <<'PLIST'
 </dict>
 </plist>
 PLIST
-codesign --force --options runtime --sign - "$app" # hardened runtime: no code injection or unsigned libraries
+# Hardened runtime: no code injection or unsigned libraries. Ad-hoc signing ("-") by default; Spotlight, Siri and
+# Shortcuts refuse App Intents from apps without an Apple Team ID, so set SQUINT_SIGN_IDENTITY to a signing identity
+# (for example "Apple Development", free with an Apple ID in Xcode) to make Squint's actions work.
+codesign --force --options runtime --sign "${SQUINT_SIGN_IDENTITY:--}" "$app"
 echo "$app"

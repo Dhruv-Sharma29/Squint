@@ -91,7 +91,7 @@ Identifiers stay identifiers. `fib(n):` stays `fib(n):`, not `fib (n) :`, and `i
 <td valign="top">
 
 ### 🔍 Spotlight, Siri and Shortcuts
-Type "Squint" in Spotlight to capture. In Shortcuts, every action hands back the text, ready for your next step.
+Type "Squint" in Spotlight to capture. In Shortcuts, every action hands back the text, ready for your next step. <sub>Needs a build signed with your Apple ID; see [Usage](docs/usage.md#spotlight-siri-and-shortcuts).</sub>
 
 </td>
 </tr>

@@ -60,7 +60,9 @@ Type **"Squint"** in Spotlight to see its actions:
 
 The same actions are in the **Shortcuts** app under Squint, and each one **returns the captured text**, so a shortcut can pass it on: append it to a note, translate it, or open it in an editor. With Siri, say "Capture code with Squint".
 
-If the actions don't show up, open Squint once and wait a moment while macOS indexes it. Moving `Squint.app` into Applications also helps Spotlight find it.
+**Requirement:** Spotlight, Siri and Shortcuts only run actions from apps signed with an Apple Team ID. Homebrew builds are ad-hoc signed, so these actions don't appear there (the menu, shortcut and `squint://` links all still work). To enable them, build from source with your Apple ID's free development certificate: `SQUINT_SIGN_IDENTITY="Apple Development" ./bundle.sh` (add the Apple ID in Xcode › Settings › Accounts first).
+
+If the actions still don't show up, open Squint once and wait a moment while macOS indexes it. Type `squint`, not `squint://`: with the slashes, Spotlight treats it as a web address.
 
 ## QR codes and barcodes
 

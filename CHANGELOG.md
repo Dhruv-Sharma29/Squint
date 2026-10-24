@@ -7,7 +7,7 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 ### Added
 
 - **Settings window** (⌘, from the menu): record your own global shortcut, open at login, choose the Plain Mode recognition language, and play a sound when text is copied. All settings, including Code Mode, persist across launches.
-- **Spotlight, Siri and Shortcuts actions:** Capture Text, Capture Code, Capture Plain Text and Read Clipboard Image. Type "Squint" in Spotlight. In Shortcuts, each action returns the captured text.
+- **Spotlight, Siri and Shortcuts actions:** Capture Text, Capture Code, Capture Plain Text and Read Clipboard Image. Type "Squint" in Spotlight. In Shortcuts, each action returns the captured text. macOS only runs them for apps signed with an Apple Team ID: `SQUINT_SIGN_IDENTITY="Apple Development" ./bundle.sh` signs with a free Apple ID; Homebrew builds are ad-hoc and don't get them.
 - **Editor line numbers are removed** in Code Mode, even when Vision reads only two of them, and lone docstring `"""` lines Vision skips are restored.
 - More code-only misreads repaired: `{` read as `f` or `t`, a lone `}` read as `8`, `)` or `]`, template-literal backticks read as quotes, and `||` read as `|l`.
 - **VoiceOver announces** when text is copied and when a capture fails.
@@ -23,6 +23,7 @@ All notable changes to Squint are recorded here. The format follows [Keep a Chan
 
 - Character error rate on the benchmark's test set fell from **7.1% to 3.2%** (renamed identifiers: 7.4% to 3.4%; fresh held-out set: 2.4%).
 - Code Mode's menu tick now lines up with the menu's icons.
+- Builds are signed with the hardened runtime.
 - The Screen Recording message says to reopen Squint, which macOS requires before a new permission takes effect.
 
 ### Fixed
