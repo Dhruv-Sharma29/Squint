@@ -1,4 +1,8 @@
-# Squint
+<p align="center">
+  <img src="Assets/AppIcon.png" width="160" alt="Squint app icon: an eye with a code symbol inside a viewfinder">
+</p>
+
+<h1 align="center">Squint</h1>
 
 **Screen OCR for code on macOS.** Select code anywhere on your screen, such as a video tutorial, a slide deck or a screenshot, and get text you can paste and run, with its indentation, blank lines and brackets intact.
 

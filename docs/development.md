@@ -18,7 +18,27 @@ swift test                     # unit tests
 open build/Squint.app
 ```
 
-The app needs no Xcode project. Swift Package Manager builds it, and `bundle.sh` wraps the binary in an app bundle with the `Info.plist` (bundle ID, `LSUIElement`, the `squint://` scheme).
+The app needs no Xcode project. Swift Package Manager builds it, and `bundle.sh` wraps the binary in an app bundle with the `Info.plist` (bundle ID, `LSUIElement`, the `squint://` scheme). It also copies in the precompiled app icon.
+
+### App icon
+
+| File | Role |
+|---|---|
+| `Assets/AppIcon.icon` | **Source.** Apple's layered icon format; open it in Icon Composer (bundled with Xcode 26+). The artwork is a full-bleed 1024 × 1024 square, and macOS applies the rounded shape itself. |
+| `Assets/Assets.car` | Compiled icon used by macOS 26 and later |
+| `Assets/AppIcon.icns` | Compiled fallback for macOS 14–15 |
+| `Assets/AppIcon.png` | Preview used in the README |
+
+The compiled files are committed so that `bundle.sh`, and Homebrew users who only have the Command Line Tools, don't need Xcode. After editing the source, recompile with:
+
+```sh
+xcrun actool Assets/AppIcon.icon --compile Assets --platform macosx \
+  --minimum-deployment-target 14.0 --app-icon AppIcon --output-partial-info-plist "$(mktemp)"
+```
+
+Why this format: macOS 26 and later put old-style `.icns` icons, and plain asset-catalog icons, inside a grey rounded square. Only layered `.icon` artwork gets the native shape. Both alternatives were tested and both got the grey container.
+
+The menu bar keeps a monochrome SF Symbol (`text.viewfinder`), as Apple's guidelines expect for menu bar items.
 
 ## Conventions
 

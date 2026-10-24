@@ -54,6 +54,7 @@ Folders are organised by feature, with one type per file.
 | `Eval/CLI.swift` | `squint <image>` and `squint eval` |
 | `Formula/squint.rb` | Homebrew formula |
 | `bundle.sh` | Assembles and ad-hoc signs `Squint.app` |
+| `Assets/` | App icon: the `AppIcon.icon` source plus compiled `Assets.car` and `AppIcon.icns` (see [Development](development.md#app-icon)) |
 
 ## The code-layout pass
 
