@@ -308,8 +308,9 @@ footer p { margin: 0; }
     <p class="lede">Squint is screen OCR for programmers on macOS. Indentation, blank lines and closing brackets make it to your clipboard. Editor line numbers don't. It runs on your Mac in about a tenth of a second, and it's free.</p>
     <div class="install">
       <div class="command">
-        <pre id="brew"><span class="dim">$</span> brew tap dhruv-sharma29/squint https://github.com/Dhruv-Sharma29/Squint
-<span class="dim">$</span> brew install dhruv-sharma29/squint/squint</pre>
+        <pre id="brew"><span class="dim">$</span> brew tap dhruv-sharma29/tap
+<span class="dim">$</span> brew trust dhruv-sharma29/tap
+<span class="dim">$</span> brew install dhruv-sharma29/tap/squint</pre>
         <button class="copy" type="button" data-copy="brew-text">Copy</button>
       </div>
       <a class="secondary" href="https://github.com/Dhruv-Sharma29/Squint">View the source</a>
@@ -483,8 +484,9 @@ footer p { margin: 0; }
       <h2 id="install-title">Install in a minute</h2>
       <ol class="steps">
         <li><div><h3>Install with Homebrew</h3><p>Homebrew builds Squint on your Mac in about 20 seconds, so Gatekeeper never blocks it.</p>
-          <div class="command"><pre><span class="dim">$</span> brew tap dhruv-sharma29/squint https://github.com/Dhruv-Sharma29/Squint
-<span class="dim">$</span> brew install dhruv-sharma29/squint/squint</pre><button class="copy" type="button" data-copy="brew-text">Copy</button></div></div></li>
+          <div class="command"><pre><span class="dim">$</span> brew tap dhruv-sharma29/tap
+<span class="dim">$</span> brew trust dhruv-sharma29/tap
+<span class="dim">$</span> brew install dhruv-sharma29/tap/squint</pre><button class="copy" type="button" data-copy="brew-text">Copy</button></div></div></li>
         <li><div><h3>Start it, now and at every login</h3>
           <div class="command"><pre><span class="dim">$</span> brew services start squint</pre><button class="copy" type="button" data-copy="services-text">Copy</button></div></div></li>
         <li><div><h3>Allow Screen Recording</h3><p>On your first capture, macOS asks for permission. Allow Squint, then quit and reopen it.</p></div></li>
@@ -596,7 +598,7 @@ footer p { margin: 0; }
 
   // Copy buttons.
   const texts = {
-    "brew-text": "brew tap dhruv-sharma29/squint https://github.com/Dhruv-Sharma29/Squint\nbrew install dhruv-sharma29/squint/squint",
+    "brew-text": "brew tap dhruv-sharma29/tap\nbrew trust dhruv-sharma29/tap\nbrew install dhruv-sharma29/tap/squint",
     "services-text": "brew services start squint",
   };
   const status = document.getElementById("copy-status");

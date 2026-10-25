@@ -142,8 +142,9 @@ Copy as Markdown with the language tagged, tables as Markdown or spreadsheet col
 ## Install
 
 ```sh
-brew tap dhruv-sharma29/squint https://github.com/Dhruv-Sharma29/Squint
-brew install dhruv-sharma29/squint/squint
+brew tap dhruv-sharma29/tap
+brew trust dhruv-sharma29/tap   # Homebrew 7 and later ask you to trust taps outside Homebrew's own
+brew install dhruv-sharma29/tap/squint
 brew services start squint     # start now and at every login
 ```
 

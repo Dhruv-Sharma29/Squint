@@ -21,9 +21,12 @@
 ## Install with Homebrew (recommended)
 
 ```sh
-brew tap dhruv-sharma29/squint https://github.com/Dhruv-Sharma29/Squint
-brew install dhruv-sharma29/squint/squint
+brew tap dhruv-sharma29/tap
+brew trust dhruv-sharma29/tap   # Homebrew 7 and later ask you to trust taps outside Homebrew's own
+brew install dhruv-sharma29/tap/squint
 ```
+
+If you installed from the older `dhruv-sharma29/squint` tap, it keeps receiving updates; there's no need to switch.
 
 Homebrew downloads the source of the tagged release and builds it on your Mac, which takes about 20 seconds. This installs:
 
@@ -92,7 +95,7 @@ Each build has a new ad-hoc code signature, so macOS may ask for Screen Recordin
 ```sh
 brew services stop squint
 brew uninstall squint
-brew untap dhruv-sharma29/squint
+brew untap dhruv-sharma29/tap      # or dhruv-sharma29/squint, if you used the older tap
 tccutil reset ScreenCapture io.github.dhruv-sharma29.squint   # optional: forget the permission
 ```
 

@@ -12,7 +12,7 @@ The order is deliberate. **Measure first** (Phase 0), add the small expected fea
 | 1: Expected features | **Done.** Settings, custom shortcut, open at login, Plain Mode language, Spotlight/Shortcuts actions, custom words, opening links, and hiding the menu bar icon. |
 | 2: Code accuracy | **Every item built and measured.** Test-set character errors 7.1% → 3.0%, lines exact 61% → 65%, snippets that parse 5 → 11 of 40; fresh held-out set 2.1%, 75%, 10 of 22. The 90% parse target is an [open goal](#open-goals). |
 | 3: Structure beyond code | **Done.** Tables (macOS 26 or later), opt-in capture history, and a Hindi–English benchmark that led to reading a second preferred language when detection is unsure. |
-| 4: Distribution and trust | **Partly done.** CI and a release script. The one-command tap is ready to publish; signing, notarization, an official cask and auto-update need an Apple Developer ID (see below). |
+| 4: Distribution and trust | **Partly done.** CI, a release script, the `dhruv-sharma29/tap` tap and release 0.3.0; signing, notarization, an official cask and auto-update need an Apple Developer ID (see below). |
 
 **What the benchmark changed:** an AI chat assistant transcribed every test image perfectly, so Squint can't claim to be the most accurate option overall. Its case is the most accurate *on-device* option, 4.6–8× fewer errors than the OCR built into macOS, at 0.13 s per capture, free and private. The plan below reflects that.
 
@@ -53,7 +53,7 @@ Sources: [textsniper.app](https://textsniper.app) and the [TRex README](https://
 | Table detection | Not listed | ✓ | ✗ | Phase 3 |
 | Repeated capture of a region | Not listed | ✓ (watch mode) | ✗ | Phase 2, as scroll capture for code |
 | Signed builds and auto-update | Notarized | ✓ | ✗ (built from source) | Phase 4 |
-| Homebrew install | Not listed | One command (official cask) | Three commands | Phase 4 (one command) |
+| Homebrew install | Not listed | One command (official cask) | Three commands: tap, trust, install | Phase 4: own tap done; Homebrew 7 requires the trust step for any third-party tap |
 | Price | $7.99–$11.99 | Free, MIT | Free, MIT | — |
 
 ## Principles
@@ -126,7 +126,7 @@ This is where Squint wins. Work in order of measured impact: re-rank this list u
 
 | Step | Effect |
 |---|---|
-| `homebrew-tap` repository | **Ready, not published:** creating a public repository is for the owner to approve. Then `brew install dhruv-sharma29/tap/squint` is the whole install. |
+| ~~`homebrew-tap` repository~~ | **Done:** [Dhruv-Sharma29/homebrew-tap](https://github.com/Dhruv-Sharma29/homebrew-tap), first release 0.3.0. Homebrew 7 asks users to `brew trust` any third-party tap, so the install is three short commands, not one. |
 | ~~GitHub Actions CI~~ | **Done:** build, tests and a signed bundle on every push |
 | ~~Release script~~ | **Done:** [`scripts/release.sh`](../scripts/release.sh) checks CI, sets the version, tags, verifies the archive's checksum twice and updates the formula (and the tap's). |
 | Apple Developer ID ($99 a year) | **Needs the owner's paid account.** Signed and notarized downloads; Spotlight actions for everyone; keeps the Screen Recording permission across updates, which ad-hoc builds lose. `bundle.sh` already signs with any identity in `SQUINT_SIGN_IDENTITY`. |
