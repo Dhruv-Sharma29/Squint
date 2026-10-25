@@ -10,7 +10,7 @@ The order is deliberate. **Measure first** (Phase 0), add the small expected fea
 |---|---|
 | 0: Benchmark | **Done.** 40 real-code screenshots plus a renamed-identifier copy, five systems. See [Evaluation](evaluation.md). |
 | 1: Expected features | **Done.** Settings, custom shortcut, open at login, Plain Mode language, Spotlight/Shortcuts actions, custom words, opening links, and hiding the menu bar icon. |
-| 2: Code accuracy | **Every item built and measured.** Test-set character errors 7.1% → 3.0%, lines exact 61% → 65%, snippets that parse 5 → 11 of 40; fresh held-out set 2.1%, 75%, 10 of 22. Parse rate is still far from the 90% target. |
+| 2: Code accuracy | **Every item built and measured.** Test-set character errors 7.1% → 3.0%, lines exact 61% → 65%, snippets that parse 5 → 11 of 40; fresh held-out set 2.1%, 75%, 10 of 22. The 90% parse target is an [open goal](#open-goals). |
 | 3: Structure beyond code | **Done.** Tables (macOS 26 or later), opt-in capture history, and a Hindi–English benchmark that led to reading a second preferred language when detection is unsure. |
 | 4: Distribution and trust | **Partly done.** CI and a release script. The one-command tap is ready to publish; signing, notarization, an official cask and auto-update need an Apple Developer ID (see below). |
 
@@ -133,6 +133,24 @@ This is where Squint wins. Work in order of measured impact: re-rank this list u
 | Official Homebrew cask | Needs signing and notarization, plus Homebrew's notability bar: 75 stars or 30 forks or watchers, or 225 stars or 90 forks or watchers for a self-submission, and a repository at least 30 days old |
 | Auto-update | **Not needed yet:** Homebrew users have `brew upgrade`. Sparkle becomes useful with notarized direct downloads, after the Developer ID. |
 
+## Open goals
+
+### 90% of complete snippets parse
+
+**Status: open.** 11 of 40 test snippets parse (28%) and 10 of 22 on the fresh held-out set (45%), against a target of 90%.
+
+**Why more rules won't get there:** the failures inspected so far are mostly single characters Vision misreads or drops, such as an opener, a quote or an underscore. A rule written for one of these images tends to break another; two such changes were measured and dropped because each regressed 5 development images. Rules tuned further on the same images would fit those images and not new code.
+
+**What could close the gap, each scored on the held-out set before it ships:**
+
+| Approach | Trade-off |
+|---|---|
+| An on-device recognition model trained on code screenshots | The most direct fix; needs training data and must stay fast (under 1 s) and private |
+| A larger labelled dataset: more languages, themes, fonts and real captures | Makes every measurement trustworthy and is needed to train the model above |
+| Opt-in clean-up by a language model, preferably on-device | See [Not planned](#not-planned); must never change code that was read correctly |
+
+Until one of these lands, Squint reports parse rate on every benchmark run but does not claim the target.
+
 ## Not planned
 
 | Idea | Why not, for now |
@@ -149,7 +167,7 @@ Measured on the 40-image test set (rendered screenshots) after Phase 2, October 
 |---|---|---|---|
 | Character error rate | At most **half** of the better of TextSniper and TRex | 3.0% vs TRex 18.6% (TextSniper not measurable) | ✓ for TRex |
 | Lines exact | At least **20 points** above the better competitor | 65% vs TRex 2% | ✓ |
-| Parse rate for complete snippets | **90% or higher** | 28% (11 of 40); 45% (10 of 22) on the fresh held-out set | ✗: the main open problem |
+| Parse rate for complete snippets | **90% or higher** | 28% (11 of 40); 45% (10 of 22) on the fresh held-out set | ✗: an [open goal](#open-goals) |
 | Selection-to-clipboard time | **Under 1 s** at the 95th percentile | 0.14 s per recognition; 0.48 s for a cold one-off `squint` run, including start-up | ✓ |
 | User check | **4 of 5** users paste and run a snippet without editing it | Not run yet | — |
 | Regressions | None on existing benchmark images | Phase 2 left 5 of 102 test images slightly worse (Vision missed an opener and a repair followed it); none on the development set | ✗: small, recorded in [Evaluation](evaluation.md) |
