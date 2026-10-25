@@ -121,7 +121,7 @@ Then capture again and re-grant the permission.
 5. Verify as a user would:
    ```sh
    brew update
-   brew upgrade squint            # or: brew install dhruv-sharma29/tap/squint
+   brew upgrade squint            # or: brew install dhruv-sharma29/squint/squint
    brew test squint
    brew audit --strict squint
    ```
