@@ -1,8 +1,8 @@
 class Squint < Formula
   desc "Screen OCR for code that keeps indentation, blank lines and brackets"
   homepage "https://github.com/Dhruv-Sharma29/Squint"
-  url "https://github.com/Dhruv-Sharma29/Squint/archive/refs/tags/v0.2.0.tar.gz"
-  sha256 "dc6383738f81c0bbabf536b4c4aff8c42c532184a1f969ce59f4f1bca52ed3b8"
+  url "https://github.com/Dhruv-Sharma29/Squint/archive/refs/tags/v0.3.0.tar.gz"
+  sha256 "8b9ff34da83a499370f16be571fd8f85a254f9f2300963f41a51a6f7b4a5c00b"
   license "MIT"
   head "https://github.com/Dhruv-Sharma29/Squint.git", branch: "main"
 
